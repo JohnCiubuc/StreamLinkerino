@@ -44,6 +44,7 @@ cmake .. && make
 1. Detect if streamlink is installed, and if not, prompt user
 2. Detect if chatterino is installed, and if not, prompt user
 3. On switching streams, setup two mpv clients -- one playing current stream and the other loading new stream. When new stream finishes loading, swap to the new client
+4. Currently can only change stream based on chatterino. Add option to change stream ignoring chatterino (or if chatterino isn't patched)
 
 
 	
