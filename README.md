@@ -24,7 +24,7 @@ This project was created for the following reasons:
 
 1. High performance, low memory, and responsive
 
-2. No mid-roll ads
+2. No mid-roll ads (Thanks streamlink!)
 
 3. MPV player features:
 
