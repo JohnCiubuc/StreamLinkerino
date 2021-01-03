@@ -44,6 +44,7 @@ protected:
 
 private:
     void resizeEmbeds();
+    QString generateStatusHTML(bool bPrerollAds = false);
 
     Ui::MainWindow *ui;
     WindowsMatchingPid _WMP;

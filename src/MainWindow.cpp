@@ -1,5 +1,5 @@
 #include "MainWindow.h"
-#include "ui_mainwindow.h"
+#include "ui_MainWindow.h"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     ui->menubar->hide();
+    ui->statusbar->hide();
+    ui->textEdit_SwitchAlert->hide();
 
     // Run external tool checker
     _Submodules = new Submodules::SubmodulesDialog;
@@ -95,13 +97,17 @@ void MainWindow::chatterinoMonitor()
             {
                 _cChatChannel = sChans[0];
 
+                ui->textEdit_SwitchAlert->setHtml(generateStatusHTML());
+                ui->textEdit_SwitchAlert->show();
+                resizeEmbeds();
+
                 if(_bStreamlinkAllowSwitching)
                 {
                     _bStreamLinkProcessSelector = !_bStreamLinkProcessSelector;
                     _bStreamlinkAllowSwitching = !_bStreamlinkAllowSwitching;
                 }
 //                _mpvContainer->setParent(NULL);
-                ui->statusbar->show();
+//                ui->statusbar->show();
                 _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->terminate();
 
 //                 Wait for current streamlink to die before restarting
@@ -135,11 +141,17 @@ void MainWindow::readStreamLink()
     QString s = _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->readAll();
     ui->plainTextEdit->setPlainText(ui->plainTextEdit->toPlainText().append(s).append("\n"));
     ui->statusbar->showMessage(s);
+    if(s.contains("pre-roll ads"))
+    {
+        ui->textEdit_SwitchAlert->setHtml(generateStatusHTML(true));
+        resizeEmbeds();
+    }
     if(s.contains("player: mpv"))
     {
         _mpvContainer->setParent(ui->widget_2);
         _mpvContainer->show();
         ui->statusbar->hide();
+        ui->textEdit_SwitchAlert->hide();
         _bStreamlinkAllowSwitching = true;
 
         // Turnoff other streamlink if it's running
@@ -185,7 +197,7 @@ void MainWindow::initialize()
                 _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->start();
 //                _pStreamlinkProcess->terminate();
 //                _mpvContainer->setParent(NULL);
-                ui->statusbar->show();
+//                ui->statusbar->show();
 //                _mpvContainer->setParent(NULL);
 //                ui->statusbar->show();
 //                _pStreamlinkProcess->terminate();
@@ -252,5 +264,16 @@ void MainWindow::resizeEmbeds()
         _chatContainer->setGeometry(0,0,ui->widget->geometry().width(), ui->widget->geometry().height());
         _mpvContainer->setGeometry(0,0,ui->widget_2->geometry().width(), ui->widget_2->geometry().height());
     });
+}
+
+QString MainWindow::generateStatusHTML(bool bPrerollAds)
+{
+
+    QString out = "<body style=\" font-family:'Callibri'; font-size:11pt; font-weight:400; font-style:normal;\"><p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Callibri'; font-size:11pt; color:#f9f9f9;\">Switching to Channel: </span><span style=\" font-weight:600; color:#0ef0ce;\">";
+    out += _cChatChannel;
+    out += "</span>. ";
+    if(bPrerollAds)
+        out += "<span style=\" font-family:'Callibri'; font-size:11pt; color:#f9f9f9;\">Waiting for </span><span style=\" font-weight:600; color:#00ff00;\">pre-roll ads</span><span style=\" color:#00ff00;\"> to finish</span><span style=\" font-family:'Callibri'; font-size:11pt; color:#f9f9f9;\">!</span></p></body>";
+    return out;
 }
 
