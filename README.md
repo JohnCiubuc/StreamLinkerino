@@ -50,7 +50,7 @@ cmake .. && make
 
 	
 ## Screenshots
-![ss1](https://github.com/JohnCiubuc/StreamLinkerino/raw/master/screenshots/ss1.png)
+![ss1](https://github.com/JohnCiubuc/JohnCiubucGifs/raw/main/screenshots/streamlinkerino1.png)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/JohnCiubuc/JohnCiubucGifs/main/streamlinkerino.gif" />

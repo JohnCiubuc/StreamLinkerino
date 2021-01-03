@@ -7,20 +7,21 @@ CONFIG += c++11
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH       += src/
 SOURCES += \
-    main.cpp \
-    mainwindow.cpp \
-    submodulesdialog.cpp \
-    windowsmatchingpid.cpp
+    src/main.cpp \
+    src/MainWindow.cpp \
+    src/Submodules.cpp \
+    src/WindowsMatchingPID.cpp
 
 HEADERS += \
-    mainwindow.h \
-    submodulesdialog.h \
-    windowsmatchingpid.h
+    src/MainWindow.h \
+    src/Submodules.h \
+    src/WindowsMatchingPID.h
 
 FORMS += \
-    mainwindow.ui \
-    submodulesdialog.ui
+    src/Forms/MainWindow.ui \
+    src/Forms/SubmodulesDialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

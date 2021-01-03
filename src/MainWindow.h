@@ -14,8 +14,8 @@
 #include <QWindow>
 #include <QDebug>
 #include <QFileSystemWatcher>
-#include "windowsmatchingpid.h"
-#include "submodulesdialog.h"
+#include "WindowsMatchingPID.h"
+#include "Submodules.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui

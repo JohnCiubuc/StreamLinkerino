@@ -1,4 +1,4 @@
-#include "windowsmatchingpid.h"
+#include "WindowsMatchingPID.h"
 // Attempt to identify a window by name or attribute.
 // by Adam Pierce <adam@doctort.org>
 // modified by John Ciubuc <john.ciubuc@ttuhsc.edu>

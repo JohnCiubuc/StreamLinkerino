@@ -1,4 +1,4 @@
-#include "submodulesdialog.h"
+#include "Submodules.h"
 #include "ui_submodulesdialog.h"
 
 using namespace Submodules;
