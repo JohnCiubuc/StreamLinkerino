@@ -20,8 +20,9 @@ MainWindow::MainWindow(QWidget *parent)
 // Kill StreamLink and Chatterino on exit
 MainWindow::~MainWindow()
 {
-    _pStreamlinkProcess->terminate();
     _pChatterinoProcess->terminate();
+    _pStreamlinkProcess.at(0)->terminate();
+    _pStreamlinkProcess.at(1)->terminate();
     delete ui;
 }
 
@@ -66,6 +67,7 @@ void MainWindow::chatterinoMonitor()
         //      @Arg2: Unique UUID for each program (if running multiple)
         QList<QByteArray> sChans = channel.readAll().split(':');
 
+        db sChans;
         // Invalid communication
         if(sChans.size() < 2)
         {
@@ -91,19 +93,26 @@ void MainWindow::chatterinoMonitor()
             // Otherwise a channel change was requested
             else if (sChans[0] != _cChatChannel)
             {
-                _pStreamlinkProcess->terminate();
-                _mpvContainer->setParent(NULL);
                 _cChatChannel = sChans[0];
-                ui->statusbar->show();
 
-                // Wait for current streamlink to die before restarting
+                if(_bStreamlinkAllowSwitching)
+                {
+                    _bStreamLinkProcessSelector = !_bStreamLinkProcessSelector;
+                    _bStreamlinkAllowSwitching = !_bStreamlinkAllowSwitching;
+                }
+//                _mpvContainer->setParent(NULL);
+                ui->statusbar->show();
+                _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->terminate();
+
+//                 Wait for current streamlink to die before restarting
                 QTimer * restart = new QTimer(this);
                 connect(restart, &QTimer::timeout, this, [=]()
                 {
-                    if(_pStreamlinkProcess->state() == 0)
+                    if(_pStreamlinkProcess.at(_bStreamLinkProcessSelector)->state() == 0)
                     {
-                        _pStreamlinkProcess->setArguments(_Submodules->getStreamLinkArguments(_cChatChannel, _mpvContainerWID));
-                        _pStreamlinkProcess->start();
+                        _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->setArguments(_Submodules->getStreamLinkArguments(_cChatChannel, _mpvContainerWID));
+                        _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->start();
+
                         restart->deleteLater();
                     }
                 });
@@ -123,7 +132,7 @@ void MainWindow::chatterinoMonitor()
 // Load MPV when ready
 void MainWindow::readStreamLink()
 {
-    QString s = _pStreamlinkProcess->readAll();
+    QString s = _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->readAll();
     ui->plainTextEdit->setPlainText(ui->plainTextEdit->toPlainText().append(s).append("\n"));
     ui->statusbar->showMessage(s);
     if(s.contains("player: mpv"))
@@ -131,6 +140,12 @@ void MainWindow::readStreamLink()
         _mpvContainer->setParent(ui->widget_2);
         _mpvContainer->show();
         ui->statusbar->hide();
+        _bStreamlinkAllowSwitching = true;
+
+        // Turnoff other streamlink if it's running
+        if(_pStreamlinkProcess.at(!_bStreamLinkProcessSelector)->state() != QProcess::NotRunning)
+            _pStreamlinkProcess.at(!_bStreamLinkProcessSelector)->terminate();
+
         resizeEmbeds();
     }
 }
@@ -161,23 +176,33 @@ void MainWindow::initialize()
             }
             if(_Submodules->getChanges() & Submodules::ChangeFlags::StreamLink)
             {
-                _mpvContainer->setParent(NULL);
-                ui->statusbar->show();
-                _pStreamlinkProcess->terminate();
-                // Wait for current streamlink to die before restarting
-                QTimer * restart = new QTimer(this);
-                connect(restart, &QTimer::timeout, this, [=]()
+                if(_bStreamlinkAllowSwitching)
                 {
-                    if(_pStreamlinkProcess->state() == 0)
-                    {
+                    _bStreamLinkProcessSelector = !_bStreamLinkProcessSelector;
+                    _bStreamlinkAllowSwitching = !_bStreamlinkAllowSwitching;
+                }
+                _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->setArguments(_Submodules->getStreamLinkArguments(_cChatChannel, _mpvContainerWID));
+                _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->start();
+//                _pStreamlinkProcess->terminate();
+//                _mpvContainer->setParent(NULL);
+                ui->statusbar->show();
+//                _mpvContainer->setParent(NULL);
+//                ui->statusbar->show();
+//                _pStreamlinkProcess->terminate();
+//                // Wait for current streamlink to die before restarting
+//                QTimer * restart = new QTimer(this);
+//                connect(restart, &QTimer::timeout, this, [=]()
+//                {
+//                    if(_pStreamlinkProcess->state() == 0)
+//                    {
 
-                        _pStreamlinkProcess->setProgram(_Submodules->streamlinkPath());
-                        _pStreamlinkProcess->setArguments(_Submodules->getStreamLinkArguments(_cChatChannel, _mpvContainerWID));
-                        _pStreamlinkProcess->start();
-                        restart->deleteLater();
-                    }
-                });
-                restart->start(10);
+//                        _pStreamlinkProcess->setProgram(_Submodules->streamlinkPath());
+//                        _pStreamlinkProcess->setArguments(_Submodules->getStreamLinkArguments(_cChatChannel, _mpvContainerWID));
+//                        _pStreamlinkProcess->start();
+//                        restart->deleteLater();
+//                    }
+//                });
+//                restart->start(10);
             }
         }
         return;
@@ -191,9 +216,12 @@ void MainWindow::initialize()
     _pChatterinoProcess->setProgram(_Submodules->chatterinoPath());
     _pChatterinoProcess->start();
 
-    _pStreamlinkProcess = new QProcess(ui->widget_2);
-    _pStreamlinkProcess->setProgram(_Submodules->streamlinkPath());
-    connect(_pStreamlinkProcess, &QProcess::readyRead, this, &MainWindow::readStreamLink);
+    for(int i = 0; i < 2; ++i)
+    {
+        _pStreamlinkProcess << new QProcess(ui->widget_2);
+        _pStreamlinkProcess.last()->setProgram(_Submodules->streamlinkPath());
+        connect(_pStreamlinkProcess.last(), &QProcess::readyRead, this, &MainWindow::readStreamLink);
+    }
 
     // Setup mpv container and wid
     QWindow * mpv_window = new QWindow;

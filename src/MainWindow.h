@@ -51,11 +51,13 @@ private:
     QWidget * _chatContainer;
     QWidget * _mpvContainer;
     bool _bChatterinoEmbedded = false;
-    QProcess * _pStreamlinkProcess;
+    QList<QProcess *> _pStreamlinkProcess;
     QProcess * _pChatterinoProcess;
     QTimer * _tChatChannelMonitor;
     QByteArray _cChatChannel;
     QByteArray _chatterinoUUID;
     unsigned long _mpvContainerWID;
+    bool _bStreamLinkProcessSelector = true;
+    bool _bStreamlinkAllowSwitching = false;
 };
 #endif // MAINWINDOW_H
