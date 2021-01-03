@@ -8,9 +8,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    ui->menubar->hide();
+
     // Run external tool checker
-    _Submodules = new SubmodulesDialog;
-    connect(_Submodules, &SubmodulesDialog::submodulesFinished, this, &MainWindow::initialize);
+    _Submodules = new Submodules::SubmodulesDialog;
+    connect(_Submodules, &Submodules::SubmodulesDialog::submodulesFinished, this, &MainWindow::initialize);
 
     _Submodules->initialize();
 }
@@ -29,6 +31,7 @@ MainWindow::~MainWindow()
 // Monitor /tmp for chat changes (if patched)
 void MainWindow::setupChatterinoEmbed()
 {
+    _chatterinoUUID.clear();
     QTimer * findChatterino = new QTimer;
     connect(findChatterino, &QTimer::timeout, this, [=]()
     {
@@ -53,41 +56,64 @@ void MainWindow::setupChatterinoEmbed()
 
 // Requires patch to chatterino to monitor channel chages
 // Would use QFileSystemWatcher but it is bugged for linux
-void MainWindow::chatChannelMonitor()
+void MainWindow::chatterinoMonitor()
 {
     QFile channel("/tmp/chatterino_chan");
     if(channel.open(QFile::ReadOnly))
     {
+        // sChans
+        //      @Arg1: New Channel
+        //      @Arg2: Unique UUID for each program (if running multiple)
         QList<QByteArray> sChans = channel.readAll().split(':');
+
+        // Invalid communication
+        if(sChans.size() < 2)
+        {
+            db "Invalid Coms - " << sChans;
+            channel.remove();
+            return;
+        }
 
         // Initiate and save Chatterino UUID unique to this client
         if(_chatterinoUUID.isEmpty())
             _chatterinoUUID = sChans[1];
 
         channel.close();
-        // sChans
-        //      @Arg1: New Channel
-        //      @Arg2: Unique UUID for each program (if running multiple)
-        if(sChans[0] != _cChatChannel && sChans[1] == _chatterinoUUID)
+        // Communication is to this instant of streamlinkerino
+        if(sChans[1] == _chatterinoUUID)
         {
-            _pStreamlinkProcess->terminate();
-            _mpvContainer->setParent(NULL);
-            _cChatChannel = sChans[0];
-            ui->statusbar->show();
-
-            // Wait for current streamlink to die before restarting
-            QTimer * restart = new QTimer(this);
-            connect(restart, &QTimer::timeout, this, [=]()
+            // Show Settings Dialog button clicked in chatterino
+            // Open settings here too
+            if(sChans[0] == "settings-showdialog")
             {
-                if(_pStreamlinkProcess->state() == 0)
+                QTimer::singleShot(250, _Submodules, &Submodules::SubmodulesDialog::showDialog);
+            }
+            // Otherwise a channel change was requested
+            else if (sChans[0] != _cChatChannel)
+            {
+                _pStreamlinkProcess->terminate();
+                _mpvContainer->setParent(NULL);
+                _cChatChannel = sChans[0];
+                ui->statusbar->show();
+
+                // Wait for current streamlink to die before restarting
+                QTimer * restart = new QTimer(this);
+                connect(restart, &QTimer::timeout, this, [=]()
                 {
-                    _pStreamlinkProcess->setArguments(createStreamLinkArgs(_cChatChannel));
-                    _pStreamlinkProcess->start();
-                    restart->deleteLater();
-                }
-            });
-            restart->start(10);
+                    if(_pStreamlinkProcess->state() == 0)
+                    {
+                        _pStreamlinkProcess->setArguments(_Submodules->getStreamLinkArguments(_cChatChannel, _mpvContainerWID));
+                        _pStreamlinkProcess->start();
+                        restart->deleteLater();
+                    }
+                });
+                restart->start(10);
+            }
         }
+        // Delete file to avoid duplicated commands
+        // Also, ironically, allows duplicated commands to come though
+        // I.e. if settings in chatterino is clicked twice
+        channel.remove();
     }
 }
 
@@ -111,9 +137,54 @@ void MainWindow::readStreamLink()
 
 void MainWindow::initialize()
 {
+    // If we are re-initializing
+    if(_bChatterinoEmbedded)
+    {
+        // Tools changed, re-initialize only what's needed
+        if(_Submodules->getChanges() > 0)
+        {
+            if(_Submodules->getChanges() & Submodules::ChangeFlags::Chatterino)
+            {
+                _pChatterinoProcess->terminate();
+                QTimer * restart = new QTimer(this);
+                connect(restart, &QTimer::timeout, this, [=]()
+                {
+                    if(_pChatterinoProcess->state() == 0)
+                    {
+                        restart->deleteLater();
+                        _pChatterinoProcess->setProgram(_Submodules->chatterinoPath());
+                        _pChatterinoProcess->start();
+                        setupChatterinoEmbed();
+                    }
+                });
+                restart->start(10);
+            }
+            if(_Submodules->getChanges() & Submodules::ChangeFlags::StreamLink)
+            {
+                _mpvContainer->setParent(NULL);
+                ui->statusbar->show();
+                _pStreamlinkProcess->terminate();
+                // Wait for current streamlink to die before restarting
+                QTimer * restart = new QTimer(this);
+                connect(restart, &QTimer::timeout, this, [=]()
+                {
+                    if(_pStreamlinkProcess->state() == 0)
+                    {
+
+                        _pStreamlinkProcess->setProgram(_Submodules->streamlinkPath());
+                        _pStreamlinkProcess->setArguments(_Submodules->getStreamLinkArguments(_cChatChannel, _mpvContainerWID));
+                        _pStreamlinkProcess->start();
+                        restart->deleteLater();
+                    }
+                });
+                restart->start(10);
+            }
+        }
+        return;
+    }
     // Timer to check for chat channel switches
     _tChatChannelMonitor = new QTimer;
-    connect(_tChatChannelMonitor, &QTimer::timeout, this, &MainWindow::chatChannelMonitor);
+    connect(_tChatChannelMonitor, &QTimer::timeout, this, &MainWindow::chatterinoMonitor);
 
     // Setup StreamLink and Chatterino Processes
     _pChatterinoProcess = new QProcess(ui->widget);
@@ -132,7 +203,7 @@ void MainWindow::initialize()
     _mpvContainer->hide();
 
     // Settings
-    connect(ui->actionSettings, &QAction::triggered, _Submodules, &SubmodulesDialog::showDialog);
+    connect(ui->actionSettings, &QAction::triggered, _Submodules, &Submodules::SubmodulesDialog::showDialog);
 
     // Run Chatterino and Embed it
     setupChatterinoEmbed();
@@ -153,17 +224,5 @@ void MainWindow::resizeEmbeds()
         _chatContainer->setGeometry(0,0,ui->widget->geometry().width(), ui->widget->geometry().height());
         _mpvContainer->setGeometry(0,0,ui->widget_2->geometry().width(), ui->widget_2->geometry().height());
     });
-}
-
-QStringList MainWindow::createStreamLinkArgs(QString channel)
-{
-    QStringList args;
-    args << "--twitch-low-latency";
-    args << "--twitch-disable-ads";
-    args<< "--player";
-    args << "mpv --wid="+QString::number(_mpvContainerWID);
-    args << "https://www.twitch.tv/"+channel;
-    args << "best";
-    return args;
 }
 

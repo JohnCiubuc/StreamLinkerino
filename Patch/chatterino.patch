@@ -1,6 +1,627 @@
-diff -Naur src/widgets/Notebook.cpp src_new/widgets/Notebook.cpp
---- src/widgets/Notebook.cpp	2020-12-31 15:08:59.440999146 -0600
-+++ src_new/widgets/Notebook.cpp	2020-12-28 23:46:14.295480000 -0600
+diff -Naur src_old/Application.cpp src/Application.cpp
+--- src_old/Application.cpp	2021-01-02 19:22:52.334029000 -0600
++++ src/Application.cpp	2021-01-02 23:08:47.559498549 -0600
+@@ -34,8 +34,12 @@
+ #include "widgets/Notebook.hpp"
+ #include "widgets/Window.hpp"
+ #include "widgets/splits/Split.hpp"
++#include "util/streamlinkerino.h"
+ 
+-namespace chatterino {
++QString UUID;
++
++namespace chatterino
++{
+ 
+ static std::atomic<bool> isAppInitialized{false};
+ 
+@@ -62,7 +66,8 @@
+ {
+     this->instance = this;
+ 
+-    this->fonts->fontChanged.connect([this]() {
++    this->fonts->fontChanged.connect([this]()
++    {
+         this->windows->layoutChannelViews();
+     });
+ 
+@@ -77,7 +82,7 @@
+ 
+     // Show changelog
+     if (getSettings()->currentVersion.getValue() != "" &&
+-        getSettings()->currentVersion.getValue() != CHATTERINO_VERSION)
++            getSettings()->currentVersion.getValue() != CHATTERINO_VERSION)
+     {
+         auto box = new QMessageBox(QMessageBox::Information, "Chatterino 2",
+                                    "Show changelog?",
+@@ -106,7 +111,7 @@
+     if (getArgs().crashRecovery)
+     {
+         if (auto selected =
+-                this->windows->getMainWindow().getNotebook().getSelectedPage())
++                    this->windows->getMainWindow().getNotebook().getSelectedPage())
+         {
+             if (auto container = dynamic_cast<SplitContainer *>(selected))
+             {
+@@ -115,9 +120,9 @@
+                     if (auto channel = split->getChannel(); !channel->isEmpty())
+                     {
+                         channel->addMessage(makeSystemMessage(
+-                            "Chatterino unexpectedly crashed and restarted. "
+-                            "You can disable automatic restarts in the "
+-                            "settings."));
++                                                "Chatterino unexpectedly crashed and restarted. "
++                                                "You can disable automatic restarts in the "
++                                                "settings."));
+                     }
+                 }
+             }
+@@ -128,6 +133,9 @@
+ 
+     this->initNm(paths);
+     this->initPubsub();
++
++    // Setup UUID to communicate with streamlinkerino
++    UUID = QUuid::createUuid().toString();
+ }
+ 
+ int Application::run(QApplication &qtApp)
+@@ -139,18 +147,22 @@
+     this->windows->getMainWindow().show();
+ 
+     getSettings()->betaUpdates.connect(
+-        [] {
+-            Updates::instance().checkForUpdates();
+-        },
+-        false);
+-    getSettings()->moderationActions.delayedItemsChanged.connect([this] {
++        []
++    {
++        Updates::instance().checkForUpdates();
++    },
++    false);
++    getSettings()->moderationActions.delayedItemsChanged.connect([this]
++    {
+         this->windows->forceLayoutChannelViews();
+     });
+ 
+-    getSettings()->highlightedMessages.delayedItemsChanged.connect([this] {
++    getSettings()->highlightedMessages.delayedItemsChanged.connect([this]
++    {
+         this->windows->forceLayoutChannelViews();
+     });
+-    getSettings()->highlightedUsers.delayedItemsChanged.connect([this] {
++    getSettings()->highlightedUsers.delayedItemsChanged.connect([this]
++    {
+         this->windows->forceLayoutChannelViews();
+     });
+ 
+@@ -180,150 +192,165 @@
+ void Application::initPubsub()
+ {
+     this->twitch.pubsub->signals_.moderation.chatCleared.connect(
+-        [this](const auto &action) {
+-            auto chan =
+-                this->twitch.server->getChannelOrEmptyByID(action.roomID);
+-            if (chan->isEmpty())
+-            {
+-                return;
+-            }
++        [this](const auto &action)
++    {
++        auto chan =
++            this->twitch.server->getChannelOrEmptyByID(action.roomID);
++        if (chan->isEmpty())
++        {
++            return;
++        }
+ 
+-            QString text =
+-                QString("%1 cleared the chat").arg(action.source.name);
++        QString text =
++            QString("%1 cleared the chat").arg(action.source.name);
+ 
+-            auto msg = makeSystemMessage(text);
+-            postToThread([chan, msg] {
+-                chan->addMessage(msg);
+-            });
++        auto msg = makeSystemMessage(text);
++        postToThread([chan, msg]
++        {
++            chan->addMessage(msg);
+         });
++    });
+ 
+     this->twitch.pubsub->signals_.moderation.modeChanged.connect(
+-        [this](const auto &action) {
+-            auto chan =
+-                this->twitch.server->getChannelOrEmptyByID(action.roomID);
+-            if (chan->isEmpty())
+-            {
+-                return;
+-            }
++        [this](const auto &action)
++    {
++        auto chan =
++            this->twitch.server->getChannelOrEmptyByID(action.roomID);
++        if (chan->isEmpty())
++        {
++            return;
++        }
+ 
+-            QString text =
+-                QString("%1 turned %2 %3 mode")
+-                    .arg(action.source.name)
+-                    .arg(action.state == ModeChangedAction::State::On ? "on"
+-                                                                      : "off")
+-                    .arg(action.getModeName());
++        QString text =
++            QString("%1 turned %2 %3 mode")
++            .arg(action.source.name)
++            .arg(action.state == ModeChangedAction::State::On ? "on"
++                 : "off")
++            .arg(action.getModeName());
+ 
+-            if (action.duration > 0)
+-            {
+-                text.append(" (" + QString::number(action.duration) +
+-                            " seconds)");
+-            }
++        if (action.duration > 0)
++        {
++            text.append(" (" + QString::number(action.duration) +
++                        " seconds)");
++        }
+ 
+-            auto msg = makeSystemMessage(text);
+-            postToThread([chan, msg] {
+-                chan->addMessage(msg);
+-            });
++        auto msg = makeSystemMessage(text);
++        postToThread([chan, msg]
++        {
++            chan->addMessage(msg);
+         });
++    });
+ 
+     this->twitch.pubsub->signals_.moderation.moderationStateChanged.connect(
+-        [this](const auto &action) {
+-            auto chan =
+-                this->twitch.server->getChannelOrEmptyByID(action.roomID);
+-            if (chan->isEmpty())
+-            {
+-                return;
+-            }
++        [this](const auto &action)
++    {
++        auto chan =
++            this->twitch.server->getChannelOrEmptyByID(action.roomID);
++        if (chan->isEmpty())
++        {
++            return;
++        }
+ 
+-            QString text;
++        QString text;
+ 
+-            if (action.modded)
+-            {
+-                text = QString("%1 modded %2")
+-                           .arg(action.source.name, action.target.name);
+-            }
+-            else
+-            {
+-                text = QString("%1 unmodded %2")
+-                           .arg(action.source.name, action.target.name);
+-            }
++        if (action.modded)
++        {
++            text = QString("%1 modded %2")
++                   .arg(action.source.name, action.target.name);
++        }
++        else
++        {
++            text = QString("%1 unmodded %2")
++                   .arg(action.source.name, action.target.name);
++        }
+ 
+-            auto msg = makeSystemMessage(text);
+-            postToThread([chan, msg] {
+-                chan->addMessage(msg);
+-            });
++        auto msg = makeSystemMessage(text);
++        postToThread([chan, msg]
++        {
++            chan->addMessage(msg);
+         });
++    });
+ 
+     this->twitch.pubsub->signals_.moderation.userBanned.connect(
+-        [&](const auto &action) {
+-            auto chan =
+-                this->twitch.server->getChannelOrEmptyByID(action.roomID);
++        [&](const auto &action)
++    {
++        auto chan =
++            this->twitch.server->getChannelOrEmptyByID(action.roomID);
+ 
+-            if (chan->isEmpty())
+-            {
+-                return;
+-            }
++        if (chan->isEmpty())
++        {
++            return;
++        }
+ 
+-            MessageBuilder msg(action);
+-            msg->flags.set(MessageFlag::PubSub);
++        MessageBuilder msg(action);
++        msg->flags.set(MessageFlag::PubSub);
+ 
+-            postToThread([chan, msg = msg.release()] {
+-                chan->addOrReplaceTimeout(msg);
+-            });
++        postToThread([chan, msg = msg.release()]
++        {
++            chan->addOrReplaceTimeout(msg);
+         });
++    });
+ 
+     this->twitch.pubsub->signals_.moderation.userUnbanned.connect(
+-        [&](const auto &action) {
+-            auto chan =
+-                this->twitch.server->getChannelOrEmptyByID(action.roomID);
++        [&](const auto &action)
++    {
++        auto chan =
++            this->twitch.server->getChannelOrEmptyByID(action.roomID);
+ 
+-            if (chan->isEmpty())
+-            {
+-                return;
+-            }
++        if (chan->isEmpty())
++        {
++            return;
++        }
+ 
+-            auto msg = MessageBuilder(action).release();
++        auto msg = MessageBuilder(action).release();
+ 
+-            postToThread([chan, msg] {
+-                chan->addMessage(msg);
+-            });
++        postToThread([chan, msg]
++        {
++            chan->addMessage(msg);
+         });
++    });
+ 
+     this->twitch.pubsub->signals_.moderation.automodMessage.connect(
+-        [&](const auto &action) {
+-            auto chan =
+-                this->twitch.server->getChannelOrEmptyByID(action.roomID);
++        [&](const auto &action)
++    {
++        auto chan =
++            this->twitch.server->getChannelOrEmptyByID(action.roomID);
+ 
+-            if (chan->isEmpty())
+-            {
+-                return;
+-            }
++        if (chan->isEmpty())
++        {
++            return;
++        }
+ 
+-            postToThread([chan, action] {
+-                auto p = makeAutomodMessage(action);
+-                chan->addMessage(p.first);
+-                chan->addMessage(p.second);
+-            });
++        postToThread([chan, action]
++        {
++            auto p = makeAutomodMessage(action);
++            chan->addMessage(p.first);
++            chan->addMessage(p.second);
+         });
++    });
+ 
+     this->twitch.pubsub->signals_.moderation.automodUserMessage.connect(
+-        [&](const auto &action) {
+-            auto chan =
+-                this->twitch.server->getChannelOrEmptyByID(action.roomID);
++        [&](const auto &action)
++    {
++        auto chan =
++            this->twitch.server->getChannelOrEmptyByID(action.roomID);
+ 
+-            if (chan->isEmpty())
+-            {
+-                return;
+-            }
++        if (chan->isEmpty())
++        {
++            return;
++        }
+ 
+-            auto msg = MessageBuilder(action).release();
++        auto msg = MessageBuilder(action).release();
+ 
+-            postToThread([chan, msg] {
+-                chan->addMessage(msg);
+-            });
+-            chan->deleteMessage(msg->id);
++        postToThread([chan, msg]
++        {
++            chan->addMessage(msg);
+         });
++        chan->deleteMessage(msg->id);
++    });
+ 
+-    this->twitch.pubsub->signals_.pointReward.redeemed.connect([&](auto &data) {
++    this->twitch.pubsub->signals_.pointReward.redeemed.connect([&](auto &data)
++    {
+         QString channelId;
+         if (rj::getSafe(data, "channel_id", channelId))
+         {
+@@ -331,7 +358,8 @@
+ 
+             auto reward = ChannelPointReward(data);
+ 
+-            postToThread([chan, reward] {
++            postToThread([chan, reward]
++            {
+                 if (auto channel = dynamic_cast<TwitchChannel *>(chan.get()))
+                 {
+                     channel->addChannelPointReward(reward);
+@@ -341,13 +369,14 @@
+         else
+         {
+             qCDebug(chatterinoApp)
+-                << "Couldn't find channel id of point reward";
++                    << "Couldn't find channel id of point reward";
+         }
+     });
+ 
+     this->twitch.pubsub->start();
+ 
+-    auto RequestModerationActions = [=]() {
++    auto RequestModerationActions = [=]()
++    {
+         this->twitch.server->pubsub->unlistenAllModerationActions();
+         // TODO(pajlada): Unlisten to all authed topics instead of only
+         // moderation topics this->twitch.pubsub->UnlistenAllAuthedTopics();
+diff -Naur src_old/Application.hpp src/Application.hpp
+--- src_old/Application.hpp	2021-01-02 19:22:52.334029000 -0600
++++ src/Application.hpp	2021-01-02 22:52:55.153666807 -0600
+@@ -7,7 +7,8 @@
+ #include "common/Singleton.hpp"
+ #include "singletons/NativeMessaging.hpp"
+ 
+-namespace chatterino {
++namespace chatterino
++{
+ 
+ class TwitchIrcServer;
+ class PubSub;
+@@ -63,7 +64,8 @@
+     /*[[deprecated]]*/ Logging *const logging{};
+ 
+     /// Provider-specific
+-    struct {
++    struct
++    {
+         /*[[deprecated("use twitch2 instead")]]*/ TwitchIrcServer *server{};
+         /*[[deprecated("use twitch2->pubsub instead")]]*/ PubSub *pubsub{};
+     } twitch;
+diff -Naur src_old/util/streamlinkerino.h src/util/streamlinkerino.h
+--- src_old/util/streamlinkerino.h	1969-12-31 18:00:00.000000000 -0600
++++ src/util/streamlinkerino.h	2021-01-02 23:21:41.177720556 -0600
+@@ -0,0 +1,24 @@
++#ifndef STREAMLINKERINO_H
++#define STREAMLINKERINO_H
++
++#include <QString>
++#include <QFile>
++
++extern QString UUID;
++
++struct streamlinkerino
++{
++    static void write(QString s)
++    {
++        s += ":" + UUID;
++        QFile chat_com("/tmp/chatterino_chan");
++        chat_com.remove();
++        if(chat_com.open(QFile::WriteOnly))
++        {
++            chat_com.write(s.toLocal8Bit());
++            chat_com.close();
++        }
++    }
++};
++
++#endif // STREAMLINKERINO_H
+diff -Naur src_old/widgets/dialogs/SettingsDialog.cpp src/widgets/dialogs/SettingsDialog.cpp
+--- src_old/widgets/dialogs/SettingsDialog.cpp	2021-01-02 19:22:52.354029000 -0600
++++ src/widgets/dialogs/SettingsDialog.cpp	2021-01-02 23:18:09.280152818 -0600
+@@ -18,16 +18,18 @@
+ #include "widgets/settingspages/KeyboardSettingsPage.hpp"
+ #include "widgets/settingspages/ModerationPage.hpp"
+ #include "widgets/settingspages/NotificationPage.hpp"
++#include "util/streamlinkerino.h"
+ 
+ #include <QDialogButtonBox>
+ #include <QLineEdit>
+ 
+-namespace chatterino {
++namespace chatterino
++{
+ 
+ SettingsDialog::SettingsDialog(QWidget *parent)
+     : BaseWindow(
+-          {BaseWindow::Flags::DisableCustomScaling, BaseWindow::Flags::Dialog},
+-          parent)
++{BaseWindow::Flags::DisableCustomScaling, BaseWindow::Flags::Dialog},
++parent)
+ {
+     this->setWindowTitle("Chatterino Settings");
+     this->resize(915, 600);
+@@ -39,7 +41,8 @@
+     this->overrideBackgroundColor_ = QColor("#111111");
+     this->scaleChangedEvent(this->scale());  // execute twice to width of item
+ 
+-    createWindowShortcut(this, "CTRL+F", [this] {
++    createWindowShortcut(this, "CTRL+F", [this]
++    {
+         this->ui_.search->setFocus();
+         this->ui_.search->selectAll();
+     });
+@@ -52,16 +55,16 @@
+ void SettingsDialog::initUi()
+ {
+     auto outerBox = LayoutCreator<QWidget>(this->getLayoutContainer())
+-                        .setLayoutType<QVBoxLayout>()
+-                        .withoutSpacing();
++                    .setLayoutType<QVBoxLayout>()
++                    .withoutSpacing();
+ 
+     // TOP
+     auto title = outerBox.emplace<PageHeader>();
+     auto edit = LayoutCreator<PageHeader>(title.getElement())
+-                    .setLayoutType<QHBoxLayout>()
+-                    .withoutMargin()
+-                    .emplace<QLineEdit>()
+-                    .assign(&this->ui_.search);
++                .setLayoutType<QHBoxLayout>()
++                .withoutMargin()
++                .emplace<QLineEdit>()
++                .assign(&this->ui_.search);
+     edit->setPlaceholderText("Find in settings... (Ctrl+F)");
+ 
+     QObject::connect(edit.getElement(), &QLineEdit::textChanged, this,
+@@ -73,15 +76,15 @@
+ 
+     // left side (tabs)
+     centerBox.emplace<QWidget>()
+-        .assign(&this->ui_.tabContainerContainer)
+-        .setLayoutType<QVBoxLayout>()
+-        .withoutMargin()
+-        .assign(&this->ui_.tabContainer);
++    .assign(&this->ui_.tabContainerContainer)
++    .setLayoutType<QVBoxLayout>()
++    .withoutMargin()
++    .assign(&this->ui_.tabContainer);
+ 
+     // right side (pages)
+     centerBox.emplace<QStackedLayout>()
+-        .assign(&this->ui_.pageStack)
+-        .withoutMargin();
++    .assign(&this->ui_.pageStack)
++    .withoutMargin();
+ 
+     this->ui_.pageStack->setMargin(0);
+ 
+@@ -161,21 +164,21 @@
+     // Constructors are wrapped in std::function to remove some strain from first time loading.
+ 
+     // clang-format off
+-    this->addTab([]{return new GeneralPage;},          "General",        ":/settings/about.svg");
++    this->addTab([] {return new GeneralPage;},          "General",        ":/settings/about.svg");
+     this->ui_.tabContainer->addSpacing(16);
+-    this->addTab([]{return new AccountsPage;},         "Accounts",       ":/settings/accounts.svg", SettingsTabId::Accounts);
++    this->addTab([] {return new AccountsPage;},         "Accounts",       ":/settings/accounts.svg", SettingsTabId::Accounts);
+     this->ui_.tabContainer->addSpacing(16);
+-    this->addTab([]{return new CommandPage;},          "Commands",       ":/settings/commands.svg");
+-    this->addTab([]{return new HighlightingPage;},     "Highlights",     ":/settings/notifications.svg");
+-    this->addTab([]{return new IgnoresPage;},          "Ignores",        ":/settings/ignore.svg");
+-    this->addTab([]{return new FiltersPage;},          "Filters",        ":/settings/filters.svg");
++    this->addTab([] {return new CommandPage;},          "Commands",       ":/settings/commands.svg");
++    this->addTab([] {return new HighlightingPage;},     "Highlights",     ":/settings/notifications.svg");
++    this->addTab([] {return new IgnoresPage;},          "Ignores",        ":/settings/ignore.svg");
++    this->addTab([] {return new FiltersPage;},          "Filters",        ":/settings/filters.svg");
+     this->ui_.tabContainer->addSpacing(16);
+-    this->addTab([]{return new KeyboardSettingsPage;}, "Keybindings",    ":/settings/keybinds.svg");
+-    this->addTab([]{return new ModerationPage;},       "Moderation",     ":/settings/moderation.svg", SettingsTabId::Moderation);
+-    this->addTab([]{return new NotificationPage;},     "Live Notifications",  ":/settings/notification2.svg");
+-    this->addTab([]{return new ExternalToolsPage;},    "External tools", ":/settings/externaltools.svg");
++    this->addTab([] {return new KeyboardSettingsPage;}, "Keybindings",    ":/settings/keybinds.svg");
++    this->addTab([] {return new ModerationPage;},       "Moderation",     ":/settings/moderation.svg", SettingsTabId::Moderation);
++    this->addTab([] {return new NotificationPage;},     "Live Notifications",  ":/settings/notification2.svg");
++    this->addTab([] {return new ExternalToolsPage;},    "External tools", ":/settings/externaltools.svg");
+     this->ui_.tabContainer->addStretch(1);
+-    this->addTab([]{return new AboutPage;},            "About",          ":/settings/about.svg", SettingsTabId(), Qt::AlignBottom);
++    this->addTab([] {return new AboutPage;},            "About",          ":/settings/about.svg", SettingsTabId(), Qt::AlignBottom);
+     // clang-format on
+ }
+ 
+@@ -197,7 +200,8 @@
+ void SettingsDialog::selectTab(SettingsDialogTab *tab, bool byUser)
+ {
+     // add page if it's not been added yet
+-    [&] {
++    [&]
++    {
+         for (int i = 0; i < this->ui_.pageStack->count(); i++)
+             if (this->ui_.pageStack->itemAt(i)->widget() == tab->page())
+                 return;
+@@ -247,6 +251,7 @@
+ void SettingsDialog::showDialog(QWidget *parent,
+                                 SettingsDialogPreference preferredTab)
+ {
++    streamlinkerino::write("settings-showdialog");
+     static SettingsDialog *instance = new SettingsDialog(parent);
+     static bool hasShownBefore = false;
+     if (hasShownBefore)
+@@ -255,28 +260,30 @@
+ 
+     switch (preferredTab)
+     {
+-        case SettingsDialogPreference::Accounts:
+-            instance->selectTab(SettingsTabId::Accounts);
+-            break;
++    case SettingsDialogPreference::Accounts:
++        instance->selectTab(SettingsTabId::Accounts);
++        break;
+ 
+-        case SettingsDialogPreference::ModerationActions:
+-            if (auto tab = instance->tab(SettingsTabId::Moderation))
++    case SettingsDialogPreference::ModerationActions:
++        if (auto tab = instance->tab(SettingsTabId::Moderation))
++        {
++            instance->selectTab(tab);
++            if (auto page = dynamic_cast<ModerationPage *>(tab->page()))
+             {
+-                instance->selectTab(tab);
+-                if (auto page = dynamic_cast<ModerationPage *>(tab->page()))
+-                {
+-                    page->selectModerationActions();
+-                }
++                page->selectModerationActions();
+             }
+-            break;
++        }
++        break;
+ 
+-        default:;
++    default:
++        ;
+     }
+ 
+     instance->show();
+     instance->activateWindow();
+     instance->raise();
+     instance->setFocus();
++
+ }
+ 
+ void SettingsDialog::refresh()
+diff -Naur src_old/widgets/Notebook.cpp src/widgets/Notebook.cpp
+--- src_old/widgets/Notebook.cpp	2021-01-02 22:28:15.365803000 -0600
++++ src/widgets/Notebook.cpp	2021-01-02 22:39:42.799712909 -0600
 @@ -25,7 +25,8 @@
  #include <QWidget>
  #include <boost/foreach.hpp>
@@ -11,16 +632,7 @@ diff -Naur src/widgets/Notebook.cpp src_new/widgets/Notebook.cpp
  
  Notebook::Notebook(QWidget *parent)
      : BaseWidget(parent)
-@@ -34,6 +35,8 @@
-     this->addButton_->setIcon(NotebookButton::Icon::Plus);
- 
-     this->addButton_->setHidden(true);
-+
-+    containerUUID_ = QUuid::createUuid().toString();
- }
- 
- NotebookTab *Notebook::addPage(QWidget *page, QString title, bool select)
-@@ -155,7 +158,7 @@
+@@ -155,7 +156,7 @@
              else
              {
                  qCDebug(chatterinoWidget)
@@ -29,7 +641,7 @@ diff -Naur src/widgets/Notebook.cpp src_new/widgets/Notebook.cpp
              }
          }
      }
-@@ -182,17 +185,19 @@
+@@ -182,17 +183,19 @@
  bool Notebook::containsPage(QWidget *page)
  {
      return std::any_of(this->items_.begin(), this->items_.end(),
@@ -55,7 +667,7 @@ diff -Naur src/widgets/Notebook.cpp src_new/widgets/Notebook.cpp
      assert(it != this->items_.end());
      return *it;
  }
-@@ -200,14 +205,15 @@
+@@ -200,14 +203,15 @@
  bool Notebook::containsChild(const QObject *obj, const QObject *child)
  {
      return std::any_of(obj->children().begin(), obj->children().end(),
@@ -78,7 +690,7 @@ diff -Naur src/widgets/Notebook.cpp src_new/widgets/Notebook.cpp
  }
  
  void Notebook::selectIndex(int index)
-@@ -493,11 +499,11 @@
+@@ -493,11 +497,11 @@
              for (int i = colStart; i < colEnd; i++)
              {
                  largestWidth = std::max(
@@ -92,7 +704,7 @@ diff -Naur src/widgets/Notebook.cpp src_new/widgets/Notebook.cpp
              {
                  largestWidth = this->addButton_->width();
              }
-@@ -620,8 +626,10 @@
+@@ -620,8 +624,10 @@
  SplitNotebook::SplitNotebook(Window *parent)
      : Notebook(parent)
  {
@@ -105,7 +717,7 @@ diff -Naur src/widgets/Notebook.cpp src_new/widgets/Notebook.cpp
              this->addPage(true);
          });
      });
-@@ -652,14 +660,16 @@
+@@ -652,14 +658,16 @@
      settingsBtn->setVisible(!getSettings()->hidePreferencesButton.getValue());
  
      getSettings()->hidePreferencesButton.connect(
@@ -127,7 +739,7 @@ diff -Naur src/widgets/Notebook.cpp src_new/widgets/Notebook.cpp
          getApp()->windows->showSettingsDialog(this);
      });
  
-@@ -667,13 +677,15 @@
+@@ -667,13 +675,15 @@
      auto userBtn = this->addCustomButton();
      userBtn->setVisible(!getSettings()->hideUserButton.getValue());
      getSettings()->hideUserButton.connect(
@@ -148,7 +760,7 @@ diff -Naur src/widgets/Notebook.cpp src_new/widgets/Notebook.cpp
          getApp()->windows->showAccountSelectPopup(
              this->mapToGlobal(userBtn->rect().bottomRight()));
      });
-@@ -699,7 +711,7 @@
+@@ -699,7 +709,7 @@
      auto *selectedPage = this->getSelectedPage();
  
      return selectedPage != nullptr ? (SplitContainer *)selectedPage
@@ -157,9 +769,9 @@ diff -Naur src/widgets/Notebook.cpp src_new/widgets/Notebook.cpp
  }
  
  void SplitNotebook::select(QWidget *page)
-diff -Naur src/widgets/Notebook.hpp src_new/widgets/Notebook.hpp
---- src/widgets/Notebook.hpp	2020-12-31 15:08:59.441999134 -0600
-+++ src_new/widgets/Notebook.hpp	2020-12-28 23:46:53.717242000 -0600
+diff -Naur src_old/widgets/Notebook.hpp src/widgets/Notebook.hpp
+--- src_old/widgets/Notebook.hpp	2021-01-02 22:28:15.365803000 -0600
++++ src/widgets/Notebook.hpp	2021-01-02 22:39:12.396052080 -0600
 @@ -8,7 +8,8 @@
  #include <QWidget>
  #include <pajlada/signals/signalholder.hpp>
@@ -170,19 +782,7 @@ diff -Naur src/widgets/Notebook.hpp src_new/widgets/Notebook.hpp
  
  class Window;
  class UpdateDialog;
-@@ -56,6 +57,11 @@
- 
-     void setTabDirection(NotebookTabDirection direction);
- 
-+    QString getContainerUUID()
-+    {
-+        return containerUUID_;
-+    };
-+
- protected:
-     virtual void scaleChangedEvent(float scale_) override;
-     virtual void resizeEvent(QResizeEvent *) override;
-@@ -65,7 +71,8 @@
+@@ -65,7 +66,8 @@
      NotebookButton *addCustomButton();
  
  private:
@@ -192,19 +792,18 @@ diff -Naur src/widgets/Notebook.hpp src_new/widgets/Notebook.hpp
          NotebookTab *tab{};
          QWidget *page{};
          QWidget *selectedWidget{};
-@@ -87,6 +94,8 @@
-     bool showAddButton_ = false;
-     int lineOffset_ = 20;
-     NotebookTabDirection tabDirection_ = NotebookTabDirection::Horizontal;
-+
-+    QString containerUUID_;
- };
+diff -Naur src_old/widgets/splits/SplitContainer.cpp src/widgets/splits/SplitContainer.cpp
+--- src_old/widgets/splits/SplitContainer.cpp	2021-01-02 22:28:15.366803000 -0600
++++ src/widgets/splits/SplitContainer.cpp	2021-01-02 23:21:22.541848698 -0600
+@@ -12,6 +12,7 @@
+ #include "widgets/helper/ChannelView.hpp"
+ #include "widgets/helper/NotebookTab.hpp"
+ #include "widgets/splits/Split.hpp"
++#include "util/streamlinkerino.h"
  
- class SplitNotebook : public Notebook, pajlada::Signals::SignalHolder
-diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitContainer.cpp
---- src/widgets/splits/SplitContainer.cpp	2020-12-31 15:08:59.441999134 -0600
-+++ src_new/widgets/splits/SplitContainer.cpp	2020-12-28 23:47:58.991846000 -0600
-@@ -26,7 +26,8 @@
+ #include <QApplication>
+ #include <QDebug>
+@@ -26,7 +27,8 @@
  #include <algorithm>
  #include <boost/foreach.hpp>
  
@@ -214,7 +813,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
  
  bool SplitContainer::isDraggingSplit = false;
  Split *SplitContainer::draggingSplit = nullptr;
-@@ -39,7 +40,8 @@
+@@ -39,7 +41,8 @@
  {
      this->refreshTabTitle();
  
@@ -224,7 +823,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
          this->layout();
  
          if (modifiers == showResizeHandlesModifiers)
-@@ -71,7 +73,8 @@
+@@ -71,7 +74,8 @@
      this->setCursor(Qt::PointingHandCursor);
      this->setAcceptDrops(true);
  
@@ -234,7 +833,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
          this->isDragging_ = false;
          this->layout();
      });
-@@ -80,6 +83,7 @@
+@@ -80,6 +84,7 @@
  
      this->setMouseTracking(true);
      this->setAcceptDrops(true);
@@ -242,7 +841,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
  }
  
  NotebookTab *SplitContainer::getTab() const
-@@ -121,7 +125,8 @@
+@@ -121,7 +126,8 @@
  
      if (openChannelNameDialog)
      {
@@ -252,7 +851,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
              if (!ok)
              {
                  this->deleteSplit(split);
-@@ -212,18 +217,21 @@
+@@ -212,18 +218,21 @@
      this->refreshTab();
  
      this->managedConnect(split->getChannelView().tabHighlightRequested,
@@ -282,20 +881,11 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
          this->setSelected(split);
      });
  
-@@ -232,9 +240,19 @@
+@@ -232,9 +241,10 @@
  
  void SplitContainer::setSelected(Split *split)
  {
-+    qDebug() << "channel selected: " << split->getChannel()->getName();
-+    QFile chat_com("/tmp/chatterino_chan");
-+    chat_com.remove();
-+    if(chat_com.open(QFile::WriteOnly))
-+    {
-+        QString out = split->getChannel()->getName() + ":" + reinterpret_cast<Notebook*>(this->parent())->getContainerUUID();
-+        qDebug() << out;
-+        chat_com.write(out.toLocal8Bit().data());
-+        chat_com.close();
-+    }
++    streamlinkerino::write(split->getChannel()->getName());
      // safety
      if (std::find(this->splits_.begin(), this->splits_.end(), split) ==
 -        this->splits_.end())
@@ -303,7 +893,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
      {
          return;
      }
-@@ -321,9 +339,10 @@
+@@ -321,9 +331,10 @@
              auto &siblings = node->parent_->children_;
  
              auto it = std::find_if(siblings.begin(), siblings.end(),
@@ -317,7 +907,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
              assert(it != siblings.end());
  
              if (direction == Direction::Left || direction == Direction::Above)
-@@ -362,32 +381,36 @@
+@@ -362,32 +373,36 @@
  {
      switch (node->type_)
      {
@@ -375,7 +965,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
      }
  }
  
-@@ -395,17 +418,18 @@
+@@ -395,17 +410,18 @@
  {
      switch (node.getType())
      {
@@ -405,7 +995,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
      }
      return nullptr;
  }
-@@ -527,9 +551,10 @@
+@@ -527,9 +543,10 @@
          {
              auto it =
                  std::find_if(this->dropRects_.begin(), this->dropRects_.end(),
@@ -419,7 +1009,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
              if (it != this->dropRects_.end())
              {
                  this->insertSplit(new Split(this), it->position);
-@@ -624,8 +649,8 @@
+@@ -624,8 +641,8 @@
  
      QBrush accentColor =
          (QApplication::activeWindow() == this->window()
@@ -430,7 +1020,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
  
      painter.fillRect(0, 0, width(), 1, accentColor);
  }
-@@ -861,7 +886,7 @@
+@@ -861,7 +878,7 @@
  }
  
  const std::vector<std::unique_ptr<SplitContainer::Node>>
@@ -439,7 +1029,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
  {
      return this->children_;
  }
-@@ -888,9 +913,10 @@
+@@ -888,9 +905,10 @@
      }
  
      return std::any_of(this->children_.begin(), this->children_.end(),
@@ -453,7 +1043,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
  }
  
  SplitContainer::Node *SplitContainer::Node::findNodeContainingSplit(
-@@ -914,28 +940,32 @@
+@@ -914,28 +932,32 @@
  }
  
  void SplitContainer::Node::insertSplitRelative(Split *_split,
@@ -503,7 +1093,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
          }
          return;
      }
-@@ -953,7 +983,7 @@
+@@ -953,7 +975,7 @@
  }
  
  void SplitContainer::Node::nestSplitIntoCollection(Split *_split,
@@ -512,7 +1102,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
  {
      if (toContainerType(_direction) == this->type_)
      {
-@@ -997,9 +1027,10 @@
+@@ -997,9 +1019,10 @@
      }
  
      auto it =
@@ -526,7 +1116,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
  
      assert(it != siblings.end());
      if (_direction == Direction::Right || _direction == Direction::Below)
-@@ -1040,9 +1071,10 @@
+@@ -1040,9 +1063,10 @@
          auto &siblings = this->parent_->children_;
  
          auto it =
@@ -540,7 +1130,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
          assert(it != siblings.end());
  
          Position position;
-@@ -1053,7 +1085,7 @@
+@@ -1053,7 +1077,7 @@
              if (this->parent_->type_ == Type::VerticalContainer)
              {
                  position.direction_ = siblings.begin() == it ? Direction::Above
@@ -549,7 +1139,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
              }
              else
              {
-@@ -1067,7 +1099,7 @@
+@@ -1067,7 +1091,7 @@
              _parent->type_ = sibling->type_;
              _parent->split_ = sibling->split_;
              std::vector<std::unique_ptr<Node>> nodes =
@@ -558,7 +1148,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
              for (auto &node : nodes)
              {
                  node->parent_ = _parent;
-@@ -1080,8 +1112,8 @@
+@@ -1080,8 +1104,8 @@
              {
                  position.direction_ =
                      this->parent_->type_ == Type::VerticalContainer
@@ -569,7 +1159,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
                  siblings.erase(it);
                  position.relativeNode_ = siblings.back().get();
              }
-@@ -1090,8 +1122,8 @@
+@@ -1090,8 +1114,8 @@
                  position.relativeNode_ = (it + 1)->get();
                  position.direction_ =
                      this->parent_->type_ == Type::VerticalContainer
@@ -580,7 +1170,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
                  siblings.erase(it);
              }
          }
-@@ -1114,9 +1146,10 @@
+@@ -1114,9 +1138,10 @@
  {
      return std::accumulate(this->children_.begin(), this->children_.end(),
                             qreal(0),
@@ -594,7 +1184,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
  }
  
  void SplitContainer::Node::layout(bool addSpacing, float _scale,
-@@ -1133,156 +1166,159 @@
+@@ -1133,156 +1158,159 @@
  
      switch (this->type_)
      {
@@ -741,12 +1331,12 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
 +            {
 +                childRect.setLeft(childRect.left() + offset);
 +                childRect.setRight(childRect.right() - offset);
-             }
++            }
 +            else
 +            {
 +                childRect.setTop(childRect.top() + offset);
 +                childRect.setBottom(childRect.bottom() - offset);
-+            }
+             }
 +        }
  
 -            // iterate children
@@ -883,7 +1473,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
  }
  
  //
-@@ -1441,9 +1477,10 @@
+@@ -1441,9 +1469,10 @@
  
      auto &siblings = node->parent_->getChildren();
      auto it = std::find_if(siblings.begin(), siblings.end(),
@@ -897,7 +1487,7 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
  
      assert(it != siblings.end());
      Node *before = siblings[it - siblings.begin() - 1].get();
-@@ -1451,16 +1488,16 @@
+@@ -1451,16 +1480,16 @@
      QPoint topLeft =
          this->parent->mapToGlobal(before->geometry_.topLeft().toPoint());
      QPoint bottomRight = this->parent->mapToGlobal(
@@ -921,9 +1511,9 @@ diff -Naur src/widgets/splits/SplitContainer.cpp src_new/widgets/splits/SplitCon
  
      QPoint mousePoint(globalX, globalY);
  
-diff -Naur src/widgets/splits/SplitContainer.hpp src_new/widgets/splits/SplitContainer.hpp
---- src/widgets/splits/SplitContainer.hpp	2020-12-31 15:08:59.441999134 -0600
-+++ src_new/widgets/splits/SplitContainer.hpp	2020-12-28 23:48:07.154797000 -0600
+diff -Naur src_old/widgets/splits/SplitContainer.hpp src/widgets/splits/SplitContainer.hpp
+--- src_old/widgets/splits/SplitContainer.hpp	2021-01-02 22:28:15.366803000 -0600
++++ src/widgets/splits/SplitContainer.hpp	2021-01-02 22:28:49.993239456 -0600
 @@ -15,10 +15,13 @@
  #include <pajlada/signals/signal.hpp>
  #include <pajlada/signals/signalholder.hpp>

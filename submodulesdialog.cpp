@@ -1,14 +1,17 @@
 #include "submodulesdialog.h"
 #include "ui_submodulesdialog.h"
 
+using namespace Submodules;
+
 SubmodulesDialog::SubmodulesDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SubmodulesDialog)
 {
     ui->setupUi(this);
     this->hide();
-    ui->label_chatterinoAlert->hide();
-    ui->label_streamlinkAlert->hide();
+    _SL = new Streamlink;
+
+    hideAlerts();
 
     setupConnections();
 }
@@ -50,6 +53,11 @@ QString SubmodulesDialog::streamlinkQuality()
     return  ui->comboBox_StreamlinkQuality->currentText();
 }
 
+QStringList SubmodulesDialog::getStreamLinkArguments(QString channel, unsigned long mpvContainer)
+{
+    return _SL->getArgs(channel, mpvContainer);
+}
+
 void SubmodulesDialog::saveSettings()
 {
     QSettings settings(QSettings::NativeFormat, QSettings::UserScope,"streamlinkerino", "streamlinkerino");
@@ -59,12 +67,14 @@ void SubmodulesDialog::saveSettings()
     settings.setValue("streamlink_args", _streamlinkArgs);
     settings.setValue("streamlink_quality", ui->comboBox_StreamlinkQuality->currentIndex());
     settings.endGroup();
+
+    _SL->setQuality(ui->comboBox_StreamlinkQuality->currentIndex());
 }
 
 void SubmodulesDialog::closeEvent(QCloseEvent *e)
 {
+    hideAlerts();
     emit submodulesFinished();
-//    e->ignore();
     e->accept();
 }
 
@@ -113,6 +123,7 @@ void SubmodulesDialog::loadSettings()
     }
     settings.endGroup();
 
+    _SL->setQuality(ui->comboBox_StreamlinkQuality->currentIndex());
     if (_streamlinkPath.isEmpty() || _chatterinoPath.isEmpty())
         showMessageBox();
     else
@@ -124,13 +135,12 @@ void SubmodulesDialog::showDialog()
     ui->lineEdit_chatterinoPath->setText(_chatterinoPath);
     ui->lineEdit_streamLinkPath->setText(_streamlinkPath);
     ui->lineEdit_streamLinkOptions->setText(_streamlinkArgs);
+    _changes = 0;
     this->show();
 }
 
 void SubmodulesDialog::initialize()
 {
-
-
     loadSettings();
 }
 
@@ -143,7 +153,7 @@ void SubmodulesDialog::setupConnections()
                            << loc + "/chatterino";
         foreach(QString path, paths)
         {
-            qDebug() << this << path;
+            if(!path.contains("chatterino")) continue;
             QFileInfo check_file(path);
             if (check_file.exists() && check_file.isFile())
             {
@@ -151,6 +161,12 @@ void SubmodulesDialog::setupConnections()
                 ui->label_chatterinoAlert->setStyleSheet(_styleGreen);
                 ui->label_chatterinoAlert->show();
                 _chatterinoPath = path;
+                // If there's a difference
+                if(!_chatterinoPath.isEmpty() && _chatterinoPath != loc)
+                {
+                    if(!(_changes & ChangeFlags::Chatterino))
+                        _changes ^= ChangeFlags::Chatterino;
+                }
                 saveSettings();
                 return;
             }
@@ -168,14 +184,20 @@ void SubmodulesDialog::setupConnections()
                            << loc + "/streamlink";
         foreach(QString path, paths)
         {
-            db path;
+            if(!path.contains("streamlink")) continue;
             QFileInfo check_file(path);
             if (check_file.exists() && check_file.isFile())
             {
                 ui->label_streamlinkAlert->setText("Streamlink Found");
                 ui->label_streamlinkAlert->setStyleSheet(_styleGreen);
                 ui->label_streamlinkAlert->show();
-                _chatterinoPath = path;
+                _streamlinkPath = path;
+                // If there's no difference
+                if(!_streamlinkPath.isEmpty() && _streamlinkPath != loc)
+                {
+                    if(!(_changes & ChangeFlags::StreamLink))
+                        _changes ^= ChangeFlags::StreamLink;
+                }
                 saveSettings();
                 return;
             }
@@ -189,5 +211,47 @@ void SubmodulesDialog::setupConnections()
 
     connect(ui->lineEdit_streamLinkOptions, &QLineEdit::editingFinished, this, &SubmodulesDialog::saveSettings);
     // Man, this connect is ugly af
-    connect(ui->comboBox_StreamlinkQuality, static_cast<void (QComboBox::*)(const int)>(&QComboBox::currentIndexChanged), this, &SubmodulesDialog::saveSettings);
+    connect(ui->comboBox_StreamlinkQuality, static_cast<void (QComboBox::*)(const int)>(&QComboBox::currentIndexChanged), this, [=]()
+    {
+        // Queue up streamlink reset
+        if(!(_changes & ChangeFlags::StreamLink))
+            _changes ^= ChangeFlags::StreamLink;
+
+        saveSettings();
+    });
+}
+
+void SubmodulesDialog::hideAlerts()
+{
+    ui->label_chatterinoAlert->hide();
+    ui->label_streamlinkAlert->hide();
+}
+
+int Submodules::SubmodulesDialog::getChanges()
+{
+    return _changes;
+}
+
+QStringList Streamlink::getArgs(QString channel, unsigned long mpvContainer)
+{
+    QStringList args;
+    args << "--twitch-low-latency";
+    args << "--twitch-disable-ads";
+    args<< "--player";
+    args << "mpv --wid="+QString::number(mpvContainer);
+    args << "https://www.twitch.tv/"+channel;
+    args << _quality;
+    return args;
+}
+
+void Streamlink::setQuality(int qual)
+{
+    if(qual >8)
+    {
+        db "setQuality OOR";
+        return;
+    }
+    const char * qualityList[] = {"best", "1080p60", "720p60", "720p", "480p", "360p", "160p", "worst", "audio_only"};
+
+    _quality = QString(qualityList[qual]);
 }

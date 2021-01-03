@@ -35,7 +35,7 @@ public:
 
 private slots:
     void setupChatterinoEmbed();
-    void chatChannelMonitor();
+    void chatterinoMonitor();
     void readStreamLink();
     void initialize();
 
@@ -44,11 +44,10 @@ protected:
 
 private:
     void resizeEmbeds();
-    QStringList createStreamLinkArgs(QString channel);
 
     Ui::MainWindow *ui;
     WindowsMatchingPid _WMP;
-    SubmodulesDialog * _Submodules;
+    Submodules::SubmodulesDialog * _Submodules;
     QWidget * _chatContainer;
     QWidget * _mpvContainer;
     bool _bChatterinoEmbedded = false;

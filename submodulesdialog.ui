@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>642</width>
-    <height>457</height>
+    <height>493</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,7 +54,7 @@
          </font>
         </property>
         <layout class="QGridLayout" name="gridLayout_2">
-         <item row="3" column="1">
+         <item row="5" column="1" colspan="2">
           <widget class="QLineEdit" name="lineEdit_streamLinkOptions">
            <property name="font">
             <font>
@@ -63,7 +63,7 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
+         <item row="3" column="1" colspan="2">
           <widget class="QLineEdit" name="lineEdit_streamLinkPath">
            <property name="font">
             <font>
@@ -75,77 +75,7 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="comboBox_StreamlinkQuality">
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-            </font>
-           </property>
-           <item>
-            <property name="text">
-             <string>Source</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>High</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Medium</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Low</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Audio only</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_3">
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Streamlink path:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_4">
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Preferred quality:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Additional options:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" colspan="2">
+         <item row="0" column="0" colspan="3">
           <widget class="QLabel" name="label_streamlinkAlert">
            <property name="font">
             <font>
@@ -164,6 +94,161 @@ color: rgb(156, 12, 21);</string>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
            </property>
+          </widget>
+         </item>
+         <item row="4" column="1" colspan="2">
+          <widget class="QComboBox" name="comboBox_StreamlinkQuality">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <item>
+            <property name="text">
+             <string>Best</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1080p60</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>720p60</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>720p</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>480p</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>360p</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>160p</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Worst</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Audio only</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Streamlink path:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Preferred quality:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Additional options:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" rowspan="2" colspan="3">
+          <widget class="QWidget" name="widget_3" native="true">
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_7">
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+                <weight>50</weight>
+                <bold>false</bold>
+                <underline>true</underline>
+               </font>
+              </property>
+              <property name="text">
+               <string>&lt;a href=&quot;https://streamlink.github.io/&quot;&gt;Website&lt;/a&gt;</string>
+              </property>
+              <property name="openExternalLinks">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="Line" name="line">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_8">
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+                <weight>50</weight>
+                <bold>false</bold>
+                <underline>true</underline>
+               </font>
+              </property>
+              <property name="text">
+               <string>&lt;a href=&quot;https://github.com/streamlink/streamlink/releases/&quot;&gt;Download&lt;/a&gt;</string>
+              </property>
+              <property name="openExternalLinks">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>
