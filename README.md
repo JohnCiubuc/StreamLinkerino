@@ -19,6 +19,24 @@ This project was created for the following reasons:
 	* The base app and chatterino is C++/Qt. The Player is MPV and StreamLink is used for an ad-free stream experience. 
 	* The result is a light weight, high performance twitch client
 
+    
+## Features
+
+1. High performance, low memory, and responsive
+
+2. No mid-roll ads
+
+3. MPV player features:
+
+    * Pause
+    * Rewind
+    * Fast forward
+    * And more!
+
+4. Streamlink and Chatterino Integration
+
+5. Seamless stream switching (Chatterino patch required)
+
 ## Building 
 
 Building streamlinkerino
@@ -44,7 +62,7 @@ cmake .. && make
 
 ~~2. Detect if chatterino is installed, and if not, prompt user~~
 
-3. On switching streams, setup two mpv clients -- one playing current stream and the other loading new stream. When new stream finishes loading, swap to the new client
+~~3. On switching streams, setup two mpv clients -- one playing current stream and the other loading new stream. When new stream finishes loading, swap to the new client~~
 
 4. Currently can only change stream based on chatterino. Add option to change stream ignoring chatterino (or if chatterino isn't patched)
 
@@ -61,6 +79,11 @@ cmake .. && make
 ## Screenshots
 ![ss1](https://github.com/JohnCiubuc/JohnCiubucGifs/raw/main/screenshots/streamlinkerino1.png)
 
+(Older Version)
 <p align="center">
   <img src="https://raw.githubusercontent.com/JohnCiubuc/JohnCiubucGifs/main/streamlinkerino.gif" />
+</p>
+(Current Version)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/JohnCiubuc/JohnCiubucGifs/main/streamlinkerino2.gif" />
 </p>
