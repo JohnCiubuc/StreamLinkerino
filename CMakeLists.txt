@@ -10,6 +10,8 @@ set(CMAKE_AUTOMOC ON)
 # Instruct CMake to run uic automatically when needed.
 set(CMAKE_AUTOUIC ON)
 
+
+
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Widgets REQUIRED)
 find_package(X11 REQUIRED)
@@ -24,6 +26,9 @@ set(HEADERS
     windowsmatchingpid.h
 )
 set(UI mainwindow.ui)
+
+
+
 
 add_executable(streamlinkerino ${SOURCES} ${HEADERS} ${UI})
 target_link_libraries(streamlinkerino Qt5::Widgets X11)

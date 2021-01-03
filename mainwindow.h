@@ -14,15 +14,8 @@
 #include <QWindow>
 #include <QDebug>
 #include <QFileSystemWatcher>
-
-
-
-#include <QProcessEnvironment>
-
-
 #include "windowsmatchingpid.h"
-
-//    streamlinkArgs<< "--twitch-low-latency"<< "--twitch-disable-ads"<<"--player"<<"mpv --wid="+QString::number(mpv_window->winId()) ;
+#include "submodulesdialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -44,6 +37,7 @@ private slots:
     void setupChatterinoEmbed();
     void chatChannelMonitor();
     void readStreamLink();
+    void initialize();
 
 protected:
     void resizeEvent(QResizeEvent * event);
@@ -54,6 +48,7 @@ private:
 
     Ui::MainWindow *ui;
     WindowsMatchingPid _WMP;
+    SubmodulesDialog * _Submodules;
     QWidget * _chatContainer;
     QWidget * _mpvContainer;
     bool _bChatterinoEmbedded = false;

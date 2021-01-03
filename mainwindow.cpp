@@ -8,28 +8,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Timer to check for chat channel switches
-    _tChatChannelMonitor = new QTimer;
-    connect(_tChatChannelMonitor, &QTimer::timeout, this, &MainWindow::chatChannelMonitor);
+    // Run external tool checker
+    _Submodules = new SubmodulesDialog;
+    connect(_Submodules, &SubmodulesDialog::submodulesFinished, this, &MainWindow::initialize);
 
-    // Setup StreamLink and Chatterino Processes
-    _pChatterinoProcess = new QProcess(ui->widget);
-    _pChatterinoProcess->setProgram("/home/inathero/Gits/chatterino2/build/chatterino");
-    _pChatterinoProcess->start();
-
-    _pStreamlinkProcess = new QProcess(ui->widget_2);
-    _pStreamlinkProcess->setProgram("streamlink");
-    connect(_pStreamlinkProcess, &QProcess::readyRead, this, &MainWindow::readStreamLink);
-
-    // Setup mpv container and wid
-    QWindow * mpv_window = new QWindow;
-    _mpvContainerWID = mpv_window->winId();
-    _mpvContainer = createWindowContainer(mpv_window);
-    _mpvContainer->setSizePolicy(QSizePolicy::Policy::Expanding,QSizePolicy::Policy::Expanding);
-    _mpvContainer->hide();
-
-    // Run Chatterino and Embed it
-    setupChatterinoEmbed();
+    _Submodules->initialize();
 }
 
 // Kill StreamLink and Chatterino on exit
@@ -124,6 +107,35 @@ void MainWindow::readStreamLink()
         ui->statusbar->hide();
         resizeEmbeds();
     }
+}
+
+void MainWindow::initialize()
+{
+    // Timer to check for chat channel switches
+    _tChatChannelMonitor = new QTimer;
+    connect(_tChatChannelMonitor, &QTimer::timeout, this, &MainWindow::chatChannelMonitor);
+
+    // Setup StreamLink and Chatterino Processes
+    _pChatterinoProcess = new QProcess(ui->widget);
+    _pChatterinoProcess->setProgram(_Submodules->chatterinoPath());
+    _pChatterinoProcess->start();
+
+    _pStreamlinkProcess = new QProcess(ui->widget_2);
+    _pStreamlinkProcess->setProgram(_Submodules->streamlinkPath());
+    connect(_pStreamlinkProcess, &QProcess::readyRead, this, &MainWindow::readStreamLink);
+
+    // Setup mpv container and wid
+    QWindow * mpv_window = new QWindow;
+    _mpvContainerWID = mpv_window->winId();
+    _mpvContainer = createWindowContainer(mpv_window);
+    _mpvContainer->setSizePolicy(QSizePolicy::Policy::Expanding,QSizePolicy::Policy::Expanding);
+    _mpvContainer->hide();
+
+    // Settings
+    connect(ui->actionSettings, &QAction::triggered, _Submodules, &SubmodulesDialog::showDialog);
+
+    // Run Chatterino and Embed it
+    setupChatterinoEmbed();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
