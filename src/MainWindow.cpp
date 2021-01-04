@@ -69,7 +69,6 @@ void MainWindow::chatterinoMonitor()
         //      @Arg2: Unique UUID for each program (if running multiple)
         QList<QByteArray> sChans = channel.readAll().split(':');
 
-        db sChans;
         // Invalid communication
         if(sChans.size() < 2)
         {
@@ -155,8 +154,14 @@ void MainWindow::readStreamLink()
         _bStreamlinkAllowSwitching = true;
 
         // Turnoff other streamlink if it's running
+        // half second delay for better transition
         if(_pStreamlinkProcess.at(!_bStreamLinkProcessSelector)->state() != QProcess::NotRunning)
-            _pStreamlinkProcess.at(!_bStreamLinkProcessSelector)->terminate();
+        {
+            QTimer::singleShot(600, this, [=]()
+            {
+                _pStreamlinkProcess.at(!_bStreamLinkProcessSelector)->terminate();
+            })  ;
+        }
 
         resizeEmbeds();
     }
