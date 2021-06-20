@@ -1,5 +1,5 @@
 #include "Submodules.h"
-#include "ui_submodulesdialog.h"
+#include "ui_SubmodulesDialog.h"
 
 using namespace Submodules;
 
@@ -81,7 +81,7 @@ void SubmodulesDialog::closeEvent(QCloseEvent *e)
 void SubmodulesDialog::loadSettings()
 {
     bool bMissing = false;
-    QStringList paths = QStringList() << "/usr/bin/" << "/bin/" << "/usr/local/bin/";
+    QStringList paths = QStringList() << "/usr/bin/" << "/bin/" << "/usr/local/bin/" << "~/.local/bin/";
     QSettings settings(QSettings::NativeFormat, QSettings::UserScope,"streamlinkerino", "streamlinkerino");
     settings.beginGroup("preferences");
 
@@ -219,6 +219,9 @@ void SubmodulesDialog::setupConnections()
 
         saveSettings();
     });
+    connect(ui->pushButton, &QPushButton::clicked, this, &SubmodulesDialog::close);
+    connect(ui->pushButton_2, &QPushButton::clicked, this, &SubmodulesDialog::close);
+    connect(ui->pushButton_3, &QPushButton::clicked, this, &SubmodulesDialog::refreshStream);
 }
 
 void SubmodulesDialog::hideAlerts()
@@ -255,3 +258,4 @@ void Streamlink::setQuality(int qual)
 
     _quality = QString(qualityList[qual]);
 }
+

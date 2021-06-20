@@ -38,6 +38,7 @@ private slots:
     void chatterinoMonitor();
     void readStreamLink();
     void initialize();
+    void refreshStream();
 
 protected:
     void resizeEvent(QResizeEvent * event);

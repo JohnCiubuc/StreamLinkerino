@@ -1,4 +1,6 @@
+## Official Chatterino Implementation
 
+Integration of this application into a first-class chatterino feature is currently in process. Pull request can be [viewed here](https://github.com/Chatterino/chatterino2/pull/2854)
 
 ## streamlinkerino
 Ever wanted to use StreamLink + MPV + Chatterino all in one application? Look no further, as this project has your solution!

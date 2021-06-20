@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Run external tool checker
     _Submodules = new Submodules::SubmodulesDialog;
     connect(_Submodules, &Submodules::SubmodulesDialog::submodulesFinished, this, &MainWindow::initialize);
+    connect(_Submodules, &Submodules::SubmodulesDialog::refreshStream, this, &MainWindow::refreshStream);
 
     _Submodules->initialize();
 }
@@ -89,7 +90,8 @@ void MainWindow::chatterinoMonitor()
             // Open settings here too
             if(sChans[0] == "settings-showdialog")
             {
-                QTimer::singleShot(250, _Submodules, &Submodules::SubmodulesDialog::showDialog);
+                _Submodules->showDialog();
+//                QTimer::singleShot(250, _Submodules, &Submodules::SubmodulesDialog::showDialog);
             }
             // Otherwise a channel change was requested
             else if (sChans[0] != _cChatChannel)
@@ -252,6 +254,19 @@ void MainWindow::initialize()
 
     // Run Chatterino and Embed it
     setupChatterinoEmbed();
+}
+
+void MainWindow::refreshStream()
+{
+    if(_bStreamlinkAllowSwitching)
+    {
+        _bStreamLinkProcessSelector = !_bStreamLinkProcessSelector;
+        _bStreamlinkAllowSwitching = !_bStreamlinkAllowSwitching;
+    }
+    auto tChannel = _cChatChannel;
+    _cChatChannel = "";
+    _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->setArguments(_Submodules->getStreamLinkArguments(tChannel, _mpvContainerWID));
+    _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->start();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)

@@ -43,6 +43,7 @@ class SubmodulesDialog : public QDialog
     Q_OBJECT
 signals:
     void submodulesFinished();
+    void refreshStream();
 public:
     explicit SubmodulesDialog(QWidget *parent = nullptr);
     ~SubmodulesDialog();
@@ -62,6 +63,7 @@ public slots:
     void initialize();
 private slots:
     void saveSettings();
+
 protected:
     virtual void closeEvent(QCloseEvent *e) override;
 private:
