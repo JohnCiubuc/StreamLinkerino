@@ -47,7 +47,7 @@ Building streamlinkerino
 git clone https://github.com/JohnCiubuc/streamlinkerino.git --recurse-submodules
 cd streamlinkerino
 mkdir build && cd build
-cmake .. && make
+cmake ../src && make
 ```
 ## Patching Chatterino
 

@@ -18,14 +18,18 @@ find_package(X11 REQUIRED)
 
 set(SOURCES
     main.cpp
-    mainwindow.cpp
-    windowsmatchingpid.cpp
+    MainWindow.cpp
+    WindowsMatchingPID.cpp
+    Submodules.cpp
 )
 set(HEADERS
-    mainwindow.h
-    windowsmatchingpid.h
+  MainWindow.h
+  WindowsMatchingPID.h
+    Submodules.h
 )
-set(UI mainwindow.ui)
+set(UI 
+MainWindow.ui
+SubmodulesDialog.ui)
 
 
 
