@@ -43,14 +43,14 @@ This project was created for the following reasons:
 
 Building streamlinkerino
 
-Contributed by [dewcked](https://github.com/dewcked):
+Contributed by [dewcked](https://github.com/dewcked) from [Release #22](https://github.com/JohnCiubuc/StreamLinkerino/issues/22):
 
 
 1. Install docker and git
 2. `git clone https://github.com/JohnCiubuc/streamlinkerino.git --recurse-submodules`
 3. `git submodule update --recursive --remote`
 4. `cd streamlinkerino`
-5. Pull docker image from there.
+5. Pull docker image from [Here](https://github.com/OlivierLDff/QtLinuxCMakeDocker).
  * Linux) `docker run -it --rm -v $(pwd):/src/ --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined reivilo1234/qt-linux-cmake:qt5.15.1 bash`
  * Windows) `docker run -it --rm -v %CD%:/src/ --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined reivilo1234/qt-linux-cmake:qt5.15.1 bash`
 6. `mkdir build && cd build`
