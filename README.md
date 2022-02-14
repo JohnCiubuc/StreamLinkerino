@@ -43,12 +43,20 @@ This project was created for the following reasons:
 
 Building streamlinkerino
 
-```bash
-git clone https://github.com/JohnCiubuc/streamlinkerino.git --recurse-submodules
-cd streamlinkerino
-mkdir build && cd build
-cmake ../src && make
-```
+Contributed by [dewcked](https://github.com/dewcked):
+
+
+1. Install docker and git
+2. `git clone https://github.com/JohnCiubuc/streamlinkerino.git --recurse-submodules`
+3. `git submodule update --recursive --remote`
+4. `cd streamlinkerino`
+5. Pull docker image from there.
+ * Linux) `docker run -it --rm -v $(pwd):/src/ --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined reivilo1234/qt-linux-cmake:qt5.15.1 bash`
+ * Windows) `docker run -it --rm -v %CD%:/src/ --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined reivilo1234/qt-linux-cmake:qt5.15.1 bash`
+6. `mkdir build && cd build`
+7. `cmake ../src && make`
+
+
 ## Patching Chatterino
 
 1.  Copy `chatterino.patch` from the streamlinkerino Patch directory, into chatterino's submodule project directory (same location as `chatterino.pro`)
