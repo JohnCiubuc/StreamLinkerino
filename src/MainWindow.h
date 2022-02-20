@@ -6,16 +6,17 @@
 #include <thread>
 
 
+#include <QDir>
 #include <QMainWindow>
 #include <QTimer>
 #include <QResizeEvent>
-
 #include <QProcess>
 #include <QWindow>
 #include <QDebug>
 #include <QFileSystemWatcher>
 #include "WindowsMatchingPID.h"
 #include "Submodules.h"
+#include "ChatterinoMonitor.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -48,6 +49,7 @@ private:
     QString generateStatusHTML(bool bPrerollAds = false);
 
     Ui::MainWindow *ui;
+    ChatterinoMonitor * _CM;
     WindowsMatchingPid _WMP;
     Submodules::SubmodulesDialog * _Submodules;
     QWidget * _chatContainer;

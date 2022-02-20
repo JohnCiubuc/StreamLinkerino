@@ -17,7 +17,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(_Submodules, &Submodules::SubmodulesDialog::submodulesFinished, this, &MainWindow::initialize);
     connect(_Submodules, &Submodules::SubmodulesDialog::refreshStream, this, &MainWindow::refreshStream);
 
-    _Submodules->initialize();
+
+    _CM = new ChatterinoMonitor(QDir::homePath());
+
+    //Temporary off for debugging
+    //_Submodules->initialize();
 }
 
 // Kill StreamLink and Chatterino on exit
