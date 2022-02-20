@@ -9,12 +9,14 @@ CONFIG += c++11
 
 INCLUDEPATH       += src/
 SOURCES += \
+    src/ChatterinoMonitor.cpp \
     src/main.cpp \
     src/MainWindow.cpp \
     src/Submodules.cpp \
     src/WindowsMatchingPID.cpp
 
 HEADERS += \
+    src/ChatterinoMonitor.h \
     src/MainWindow.h \
     src/Submodules.h \
     src/WindowsMatchingPID.h

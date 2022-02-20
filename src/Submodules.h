@@ -7,9 +7,9 @@
 #include <QSettings>
 #include <QFileInfo>
 #include <QCloseEvent>
-//#include <QComboBox>
 
 #define db qDebug() << this <<
+
 namespace Ui
 {
 class SubmodulesDialog;
