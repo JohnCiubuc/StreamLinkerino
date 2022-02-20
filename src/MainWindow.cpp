@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    this->installEventFilter(this);
     ui->menubar->hide();
     ui->statusbar->hide();
     ui->textEdit_SwitchAlert->hide();
@@ -18,22 +18,35 @@ MainWindow::MainWindow(QWidget *parent)
     connect(_Submodules, &Submodules::SubmodulesDialog::refreshStream, this, &MainWindow::refreshStream);
 
 
+    //Temporary off for debugging
+    _Submodules->initialize();
+
     _CM = new ChatterinoMonitor(QDir::homePath());
+    connect(_CM, &ChatterinoMonitor::changeChannel, this, &MainWindow::changeChannel);
 
     forceLoadMenu = new QMenu();
     forceLoadMenu->addAction(new QAction("Load this"));
+    connect(forceLoadMenu, &QMenu::triggered, this, [=](QAction * trig)
+    {
+        if(trig->text() == "Load this")
+        {
+            _pChatterinoProcess->close();
+            _pChatterinoProcess->start();
+        }
+    });
     connect(ui->widget, &ChatterinoWidget::chatterinoRightMouseClick, this, [=](QPoint pos)
     {
         forceLoadMenu->exec(pos);
     });
 
-    //Temporary off for debugging
-    //_Submodules->initialize();
 }
 
 // Kill StreamLink and Chatterino on exit
 MainWindow::~MainWindow()
 {
+    _pChatterinoProcess->close();
+    _pStreamlinkProcess.at(0)->close();
+    _pStreamlinkProcess.at(1)->close();
     _pChatterinoProcess->terminate();
     _pStreamlinkProcess.at(0)->terminate();
     _pStreamlinkProcess.at(1)->terminate();
@@ -55,6 +68,7 @@ void MainWindow::setupChatterinoEmbed()
         {
             QWindow *window = QWindow::fromWinId(result);
             _chatContainer = createWindowContainer(window);
+            _chatContainer->installEventFilter(ui->widget);
             _chatContainer->setParent(ui->widget);
             _chatContainer->setSizePolicy(QSizePolicy::Policy::Expanding,QSizePolicy::Policy::Expanding);
             _chatContainer->show();
@@ -64,6 +78,12 @@ void MainWindow::setupChatterinoEmbed()
             _bChatterinoEmbedded = true;
             _tChatChannelMonitor->start(500);
             findChatterino->deleteLater();
+            _bLoadFinished = true;
+            if(!_pendingChannelLoad.isEmpty())
+            {
+                changeChannel(_pendingChannelLoad);
+                _pendingChannelLoad.clear();
+            }
         }
     });
     findChatterino->start(10);
@@ -73,6 +93,7 @@ void MainWindow::setupChatterinoEmbed()
 // Would use QFileSystemWatcher but it is bugged for linux
 void MainWindow::chatterinoMonitor()
 {
+//    return;
     QFile channel("/tmp/chatterino_chan");
     if(channel.open(QFile::ReadOnly))
     {
@@ -109,33 +130,10 @@ void MainWindow::chatterinoMonitor()
             {
                 _cChatChannel = sChans[0];
 
-                ui->textEdit_SwitchAlert->setHtml(generateStatusHTML());
-                ui->textEdit_SwitchAlert->show();
-                resizeEmbeds();
 
-                if(_bStreamlinkAllowSwitching)
-                {
-                    _bStreamLinkProcessSelector = !_bStreamLinkProcessSelector;
-                    _bStreamlinkAllowSwitching = !_bStreamlinkAllowSwitching;
-                }
-//                _mpvContainer->setParent(NULL);
-//                ui->statusbar->show();
-                _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->terminate();
-
-//                 Wait for current streamlink to die before restarting
-                QTimer * restart = new QTimer(this);
-                connect(restart, &QTimer::timeout, this, [=]()
-                {
-                    if(_pStreamlinkProcess.at(_bStreamLinkProcessSelector)->state() == 0)
-                    {
-                        _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->setArguments(_Submodules->getStreamLinkArguments(_cChatChannel, _mpvContainerWID));
-                        _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->start();
-
-                        restart->deleteLater();
-                    }
-                });
-                restart->start(10);
+                changeChannel();
             }
+            db "channel after";
         }
         // Delete file to avoid duplicated commands
         // Also, ironically, allows duplicated commands to come though
@@ -182,6 +180,7 @@ void MainWindow::readStreamLink()
 
 void MainWindow::initialize()
 {
+    db "initialize";
     // If we are re-initializing
     if(_bChatterinoEmbedded)
     {
@@ -265,6 +264,8 @@ void MainWindow::initialize()
 
     // Run Chatterino and Embed it
     setupChatterinoEmbed();
+
+
 }
 
 void MainWindow::refreshStream()
@@ -280,12 +281,66 @@ void MainWindow::refreshStream()
     _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->start();
 }
 
+void MainWindow::changeChannel(QByteArray channel)
+{
+    if(!_bLoadFinished)
+    {
+        _pendingChannelLoad = channel;
+        return;
+    }
+    if (!channel.isEmpty())
+        _cChatChannel = channel;
+
+    ui->textEdit_SwitchAlert->setHtml(generateStatusHTML());
+    ui->textEdit_SwitchAlert->show();
+    resizeEmbeds();
+
+    if(_bStreamlinkAllowSwitching)
+    {
+        _bStreamLinkProcessSelector = !_bStreamLinkProcessSelector;
+        _bStreamlinkAllowSwitching = !_bStreamlinkAllowSwitching;
+    }
+//                _mpvContainer->setParent(NULL);
+//                ui->statusbar->show();
+    _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->terminate();
+
+//                 Wait for current streamlink to die before restarting
+    QTimer * restart = new QTimer(this);
+    connect(restart, &QTimer::timeout, this, [=]()
+    {
+        if(_pStreamlinkProcess.at(_bStreamLinkProcessSelector)->state() == 0)
+        {
+            _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->setArguments(_Submodules->getStreamLinkArguments(_cChatChannel, _mpvContainerWID));
+            _pStreamlinkProcess.at(_bStreamLinkProcessSelector)->start();
+
+            restart->deleteLater();
+        }
+    });
+    restart->start(10);
+}
+
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
     if(_bChatterinoEmbedded)
         resizeEmbeds();
     event->accept();
 }
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::MouseButtonRelease)
+    {
+        QMouseEvent * mouseEvent = static_cast <QMouseEvent *> (event);
+
+        if (mouseEvent -> button() == Qt::RightButton)
+        {
+            qDebug() << "riught2";
+//            emit chatterinoRightMouseClick(mouseEvent->globalPos());
+        }
+    }
+    return QWidget::eventFilter(obj, event);
+}
+
 
 void MainWindow::resizeEmbeds()
 {
@@ -295,6 +350,7 @@ void MainWindow::resizeEmbeds()
         _chatContainer->setGeometry(0,0,ui->widget->geometry().width(), ui->widget->geometry().height());
         _mpvContainer->setGeometry(0,0,ui->widget_2->geometry().width(), ui->widget_2->geometry().height());
     });
+
 }
 
 QString MainWindow::generateStatusHTML(bool bPrerollAds)

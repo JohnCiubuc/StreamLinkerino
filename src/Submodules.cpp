@@ -80,6 +80,7 @@ void SubmodulesDialog::closeEvent(QCloseEvent *e)
 
 void SubmodulesDialog::loadSettings()
 {
+    db "settings";
     bool bMissing = false;
     QStringList paths = QStringList() << "/usr/bin/" << "/bin/" << "/usr/local/bin/" << "~/.local/bin/";
     QSettings settings(QSettings::NativeFormat, QSettings::UserScope,"streamlinkerino", "streamlinkerino");

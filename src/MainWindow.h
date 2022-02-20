@@ -18,6 +18,7 @@
 #include "WindowsMatchingPID.h"
 #include "Submodules.h"
 #include "ChatterinoMonitor.h"
+#include "ChatterinoWidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -41,9 +42,11 @@ private slots:
     void readStreamLink();
     void initialize();
     void refreshStream();
+    void changeChannel(QByteArray channel = "");
 
 protected:
     void resizeEvent(QResizeEvent * event);
+    bool eventFilter(QObject *obj, QEvent *event);
 
 private:
     void resizeEmbeds();
@@ -67,5 +70,7 @@ private:
     unsigned long _mpvContainerWID;
     bool _bStreamLinkProcessSelector = true;
     bool _bStreamlinkAllowSwitching = false;
+    bool _bLoadFinished = false;
+    QByteArray _pendingChannelLoad;
 };
 #endif // MAINWINDOW_H

@@ -16,6 +16,7 @@ public:
     explicit ChatterinoMonitor(QString homePath, QObject *parent = nullptr);
 
 signals:
+    void changeChannel(QByteArray);
 private slots:
     void windowLayoutUpdated();
 private:
@@ -26,7 +27,7 @@ private:
 
     QDateTime _windowLayoutLastModified;
     QString _windowLayoutJsonPath = "/.local/share/chatterino/Settings/window-layout.json";
-    QString _activeChannel;
+    QByteArray _activeChannel;
 };
 
 #endif // CHATTERINOMONITOR_H

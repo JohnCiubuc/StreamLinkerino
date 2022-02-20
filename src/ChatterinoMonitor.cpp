@@ -35,7 +35,12 @@ void ChatterinoMonitor::windowLayoutUpdated()
     {
         if(obj.toObject()["selected"].toBool(false))
         {
-            db obj.toObject()["splits2"].toObject()["data"].toObject()["name"].toString();
+            QByteArray channel = obj.toObject()["splits2"].toObject()["data"].toObject()["name"].toString().toLocal8Bit();
+            if (_activeChannel.compare(channel) != 0)
+            {
+                _activeChannel = channel;
+                emit changeChannel(channel);
+            }
             return;
         }
     }
