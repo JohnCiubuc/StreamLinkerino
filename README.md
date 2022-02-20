@@ -2,6 +2,8 @@
 
 Integration of this application into a first-class chatterino feature is currently in process. Pull request can be [viewed here](https://github.com/Chatterino/chatterino2/pull/2854)
 
+Testing branch does not require chatterino to be patched, but it does have a considerable delay (5-10s) on switching streams due to chatterino json writing frequency.
+
 ## streamlinkerino
 Ever wanted to use StreamLink + MPV + Chatterino all in one application? Look no further, as this project has your solution!
 
