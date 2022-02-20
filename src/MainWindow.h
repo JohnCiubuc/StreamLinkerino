@@ -13,6 +13,7 @@
 #include <QProcess>
 #include <QWindow>
 #include <QDebug>
+#include <QMenu>
 #include <QFileSystemWatcher>
 #include "WindowsMatchingPID.h"
 #include "Submodules.h"
@@ -50,6 +51,9 @@ private:
 
     Ui::MainWindow *ui;
     ChatterinoMonitor * _CM;
+
+    QMenu * forceLoadMenu;
+
     WindowsMatchingPid _WMP;
     Submodules::SubmodulesDialog * _Submodules;
     QWidget * _chatContainer;

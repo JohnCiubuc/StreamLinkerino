@@ -20,6 +20,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     _CM = new ChatterinoMonitor(QDir::homePath());
 
+    forceLoadMenu = new QMenu();
+    forceLoadMenu->addAction(new QAction("Load this"));
+    connect(ui->widget, &ChatterinoWidget::chatterinoRightMouseClick, this, [=](QPoint pos)
+    {
+        forceLoadMenu->exec(pos);
+    });
+
     //Temporary off for debugging
     //_Submodules->initialize();
 }
