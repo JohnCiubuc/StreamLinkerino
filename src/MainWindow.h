@@ -5,7 +5,21 @@
 
 #include <thread>
 
+#include <X11/Xlib.h>
 
+#undef Bool
+#undef CursorShape
+#undef Expose
+#undef KeyPress
+#undef KeyRelease
+#undef FocusIn
+#undef FocusOut
+#undef FontChange
+#undef None
+#undef Status
+#undef Unsorted
+
+#include <QAbstractEventDispatcher>
 #include <QDir>
 #include <QMainWindow>
 #include <QTimer>
@@ -47,7 +61,7 @@ private slots:
 protected:
     void resizeEvent(QResizeEvent * event);
     bool eventFilter(QObject *obj, QEvent *event);
-
+    bool x11EventFilter(XEvent * event);
 private:
     void resizeEmbeds();
     QString generateStatusHTML(bool bPrerollAds = false);
@@ -72,5 +86,7 @@ private:
     bool _bStreamlinkAllowSwitching = false;
     bool _bLoadFinished = false;
     QByteArray _pendingChannelLoad;
+
+    ChatterinoWidget * CW;
 };
 #endif // MAINWINDOW_H

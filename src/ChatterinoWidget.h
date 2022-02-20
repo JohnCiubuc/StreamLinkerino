@@ -3,10 +3,11 @@
 
 #include <QObject>
 #include <QWidget>
+#include <QLabel>
 //#include <QEvent>
 #include <QDebug>
 #include <QMouseEvent>
-class ChatterinoWidget : public QWidget
+class ChatterinoWidget : public QLabel
 {
     Q_OBJECT
 public:
@@ -14,6 +15,7 @@ public:
 
 signals:
     void chatterinoRightMouseClick(QPoint);
+    void gotEvent(QObject*, QEvent *);
 protected:
     bool eventFilter(QObject *obj, QEvent *event);;
 

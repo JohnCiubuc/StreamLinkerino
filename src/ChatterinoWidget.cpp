@@ -1,7 +1,7 @@
 #include "ChatterinoWidget.h"
 
 ChatterinoWidget::ChatterinoWidget(QWidget *parent)
-    : QWidget{parent}
+    : QLabel{parent}
 {
     this->installEventFilter(this);
 }
@@ -14,8 +14,9 @@ bool ChatterinoWidget::eventFilter(QObject *obj, QEvent *event)
 
         if (mouseEvent -> button() == Qt::RightButton)
         {
-            qDebug() << "riught";
+            qDebug() << "riught through this";
             emit chatterinoRightMouseClick(mouseEvent->globalPos());
+            emit gotEvent(obj, event);
         }
     }
     return QWidget::eventFilter(obj, event);

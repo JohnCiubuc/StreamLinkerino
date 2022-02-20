@@ -12,6 +12,19 @@ MainWindow::MainWindow(QWidget *parent)
     ui->statusbar->hide();
     ui->textEdit_SwitchAlert->hide();
 
+    CW = new ChatterinoWidget(ui->centralwidget);
+//    CW->setAttribute(Qt:: WA_TransparentForMouseEvents, true);
+    CW->setWindowFlag(Qt:: WindowStaysOnTopHint, true);
+//    CW->setWindowFlag(Qt:: X11BypassWindowManagerHint, true);
+    CW->setGeometry(0,0,1000,1000);
+    CW->setStyleSheet("background-color: rgb(23, 66, 255);");
+//    CW->show();
+    CW->hide();
+    connect(CW, &ChatterinoWidget::gotEvent, this, [=](QObject * obj, QEvent * ev)
+    {
+        QWidget::eventFilter(obj, ev);
+    });
+
     // Run external tool checker
     _Submodules = new Submodules::SubmodulesDialog;
     connect(_Submodules, &Submodules::SubmodulesDialog::submodulesFinished, this, &MainWindow::initialize);
@@ -34,10 +47,10 @@ MainWindow::MainWindow(QWidget *parent)
             _pChatterinoProcess->start();
         }
     });
-    connect(ui->widget, &ChatterinoWidget::chatterinoRightMouseClick, this, [=](QPoint pos)
-    {
-        forceLoadMenu->exec(pos);
-    });
+//    connect(ui->widget, &ChatterinoWidget::chatterinoRightMouseClick, this, [=](QPoint pos)
+//    {
+//        forceLoadMenu->exec(pos);
+//    });
 
 }
 
@@ -59,6 +72,7 @@ MainWindow::~MainWindow()
 // Monitor /tmp for chat changes (if patched)
 void MainWindow::setupChatterinoEmbed()
 {
+
     _chatterinoUUID.clear();
     QTimer * findChatterino = new QTimer;
     connect(findChatterino, &QTimer::timeout, this, [=]()
@@ -68,10 +82,12 @@ void MainWindow::setupChatterinoEmbed()
         {
             QWindow *window = QWindow::fromWinId(result);
             _chatContainer = createWindowContainer(window);
-            _chatContainer->installEventFilter(ui->widget);
+            _chatContainer->installEventFilter(CW);
             _chatContainer->setParent(ui->widget);
             _chatContainer->setSizePolicy(QSizePolicy::Policy::Expanding,QSizePolicy::Policy::Expanding);
             _chatContainer->show();
+
+            _chatContainer->setWindowFlag(Qt:: WindowStaysOnTopHint, false);
 
             resizeEmbeds();
 
@@ -253,7 +269,7 @@ void MainWindow::initialize()
     }
 
     // Setup mpv container and wid
-    QWindow * mpv_window = new QWindow;
+    QWindow * mpv_window = new QWindow();
     _mpvContainerWID = mpv_window->winId();
     _mpvContainer = createWindowContainer(mpv_window);
     _mpvContainer->setSizePolicy(QSizePolicy::Policy::Expanding,QSizePolicy::Policy::Expanding);
@@ -341,6 +357,16 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
     return QWidget::eventFilter(obj, event);
 }
 
+bool MainWindow::x11EventFilter(XEvent *event)
+{
+    db "x11";
+    if(event->type == ButtonRelease)
+    {
+        db event->xbutton.button;
+    }
+    return false;
+}
+
 
 void MainWindow::resizeEmbeds()
 {
@@ -350,7 +376,10 @@ void MainWindow::resizeEmbeds()
         _chatContainer->setGeometry(0,0,ui->widget->geometry().width(), ui->widget->geometry().height());
         _mpvContainer->setGeometry(0,0,ui->widget_2->geometry().width(), ui->widget_2->geometry().height());
     });
-
+    ui->widget->lower();
+    ui->centralwidget->lower();
+    CW->raise();
+    CW->activateWindow();
 }
 
 QString MainWindow::generateStatusHTML(bool bPrerollAds)
