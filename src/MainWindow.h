@@ -32,7 +32,6 @@
 #include "WindowsMatchingPID.h"
 #include "Submodules.h"
 #include "ChatterinoMonitor.h"
-#include "ChatterinoWidget.h"
 #include "DebugOverlay.h"
 
 QT_BEGIN_NAMESPACE
@@ -92,7 +91,6 @@ private:
     bool _bLoadFinished = false;
     QByteArray _pendingChannelLoad;
 
-    ChatterinoWidget * CW;
     DebugOverlay * DO;
     QList<QByteArray> b;
 };

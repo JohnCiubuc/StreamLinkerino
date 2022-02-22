@@ -75,7 +75,6 @@ void MainWindow::setupChatterinoEmbed()
         {
             _qtChatwindow = QWindow::fromWinId(_wChatterinoWindow);
             _chatContainer = createWindowContainer(_qtChatwindow);
-            _chatContainer->installEventFilter(CW);
             _chatContainer->setParent(ui->widget);
             _chatContainer->setSizePolicy(QSizePolicy::Policy::Expanding,QSizePolicy::Policy::Expanding);
             _chatContainer->show();
@@ -447,8 +446,6 @@ void MainWindow::resizeEmbeds()
     });
     ui->widget->lower();
     ui->centralwidget->lower();
-    CW->raise();
-    CW->activateWindow();
 }
 
 void MainWindow::createGetWindowListScriptFile()
