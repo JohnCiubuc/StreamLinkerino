@@ -352,7 +352,7 @@ void MainWindow::reloadChatterino()
     _qtChatwindow->setParent(nullptr);
     _qtChatwindow->setFlags(Qt::Window);
 
-    QTimer::singleShot(50, this, [=]()
+    QTimer::singleShot(200, this, [=]()
     {
         bool b;
         QProcess p;
