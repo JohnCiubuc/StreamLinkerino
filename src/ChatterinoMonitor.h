@@ -25,6 +25,10 @@ public:
         _pid = pid;
         _pidString = QString::number(pid);
     }
+    QString getTempScriptFile()
+    {
+        return _tempFileName;
+    }
 public slots:
     void checkWindows();
     void closeWindow(Window w);
@@ -49,6 +53,7 @@ private:
     int _pid = -1;
     QString _pidString;
     Display * _display;
+    QString _tempFileName = "/tmp/streamlinkerino-read-windows";
 #endif
 };
 

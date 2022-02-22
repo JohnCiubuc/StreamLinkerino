@@ -252,15 +252,7 @@ void MainWindow::initialize()
 
     // Setup StreamLink and Chatterino Processes
     _pChatterinoProcess = new QProcess(ui->widget);
-
-    db "set chatterino up";
-    db _Submodules->chatterinoPath();
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    env.insert("QT_LOGGING_RULES", "chatterino.*.debug=true");
-    env.insert("QT_LOGGING_TO_CONSOLE", "1");
     _pChatterinoProcess->setProgram(_Submodules->chatterinoPath());
-    _pChatterinoProcess->setProcessEnvironment(env);
-    _pChatterinoProcess->setProcessChannelMode(QProcess::MergedChannels);
     _pChatterinoProcess->start();
 
 //    QTimer * a = new QTimer;
@@ -357,16 +349,15 @@ void MainWindow::changeChannel(QByteArray channel)
 
 void MainWindow::reloadChatterino()
 {
-    db "Close window";
     _qtChatwindow->setParent(nullptr);
     _qtChatwindow->setFlags(Qt::Window);
 
-    QTimer::singleShot(5, this, [=]()
+    QTimer::singleShot(50, this, [=]()
     {
         bool b;
         QProcess p;
         p.setProgram("/bin/bash");
-        p.setArguments(QStringList() << "/home/inathero/Gits/streamlinkerino/src/scripts/get-window-list" << QString::number(_pChatterinoProcess->processId()));
+        p.setArguments(QStringList() << _CM->getTempScriptFile() << QString::number(_pChatterinoProcess->processId()));
         p.start();
         if(p.waitForFinished(1000))
         {

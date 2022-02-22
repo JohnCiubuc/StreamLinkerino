@@ -27,7 +27,7 @@ void ChatterinoMonitor::checkWindows()
     if (_pid == -1) return;
     QProcess p;
     p.setProgram("/bin/bash");
-    p.setArguments(QStringList() << "/tmp/streamlinkerino-read-windows" << _pidString);
+    p.setArguments(QStringList() << _tempFileName << _pidString);
     p.start();
     if(p.waitForFinished(1000))
     {
