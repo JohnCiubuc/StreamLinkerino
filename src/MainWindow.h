@@ -33,6 +33,7 @@
 #include "Submodules.h"
 #include "ChatterinoMonitor.h"
 #include "ChatterinoWidget.h"
+#include "DebugOverlay.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -57,6 +58,7 @@ private slots:
     void initialize();
     void refreshStream();
     void changeChannel(QByteArray channel = "");
+    void reloadChatterino();
 
 protected:
     void resizeEvent(QResizeEvent * event);
@@ -64,6 +66,7 @@ protected:
     bool x11EventFilter(XEvent * event);
 private:
     void resizeEmbeds();
+    void createGetWindowListScriptFile();
     QString generateStatusHTML(bool bPrerollAds = false);
 
     Ui::MainWindow *ui;
@@ -78,6 +81,8 @@ private:
     bool _bChatterinoEmbedded = false;
     QList<QProcess *> _pStreamlinkProcess;
     QProcess * _pChatterinoProcess;
+    Window _wChatterinoWindow;
+    QWindow * _qtChatwindow;
     QTimer * _tChatChannelMonitor;
     QByteArray _cChatChannel;
     QByteArray _chatterinoUUID;
@@ -88,5 +93,7 @@ private:
     QByteArray _pendingChannelLoad;
 
     ChatterinoWidget * CW;
+    DebugOverlay * DO;
+    QList<QByteArray> b;
 };
 #endif // MAINWINDOW_H

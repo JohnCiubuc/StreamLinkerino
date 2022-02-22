@@ -2,6 +2,25 @@
 
 Integration of this application into a first-class chatterino feature is currently in process. Pull request can be [viewed here](https://github.com/Chatterino/chatterino2/pull/2854)
 
+
+## Testing Branch
+
+**Testing branch does not require chatterino to be patched**, but it does have a considerable delay (5-10s) on switching streams due to chatterino json writing frequency.
+
+
+## Testing branch TODO:
+
+* Fix bug that the application doesn't correctly close after doing first switch
+* Fix bug where QProcess runs another bash session for `get-window-list` without watiing for previous execution to end 
+* Convert `get-window-list` script into first party feature
+* Convert `wmctrl -ic` into first party feature. Even though I'm using the same code, it doesn't work
+* Create option between wmctrl and first party feature for closing applications
+* Make file name paths more modable / into a config file
+
+## Pre-Release Windows Port
+
+[dewcked](https://github.com/dewcked) is working on a windows port version of this project. Repository can be viewed here:  [https://github.com/dewcked/StreamLinkerino/releases](https://github.com/dewcked/StreamLinkerino/releases)
+
 ## streamlinkerino
 Ever wanted to use StreamLink + MPV + Chatterino all in one application? Look no further, as this project has your solution!
 

@@ -1,7 +1,10 @@
 #include "MainWindow.h"
-#include "ui_MainWindow.h"
+#include "ui_MainWindow.h">
+#include <X11/Xatom.h>
+#include <list>
 
 
+int listSize = 0;
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -12,18 +15,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->statusbar->hide();
     ui->textEdit_SwitchAlert->hide();
 
-    CW = new ChatterinoWidget(ui->centralwidget);
-//    CW->setAttribute(Qt:: WA_TransparentForMouseEvents, true);
-    CW->setWindowFlag(Qt:: WindowStaysOnTopHint, true);
-//    CW->setWindowFlag(Qt:: X11BypassWindowManagerHint, true);
-    CW->setGeometry(0,0,1000,1000);
-    CW->setStyleSheet("background-color: rgb(23, 66, 255);");
-//    CW->show();
-    CW->hide();
-    connect(CW, &ChatterinoWidget::gotEvent, this, [=](QObject * obj, QEvent * ev)
-    {
-        QWidget::eventFilter(obj, ev);
-    });
+
+    createGetWindowListScriptFile();
 
     // Run external tool checker
     _Submodules = new Submodules::SubmodulesDialog;
@@ -31,11 +24,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(_Submodules, &Submodules::SubmodulesDialog::refreshStream, this, &MainWindow::refreshStream);
 
 
-    //Temporary off for debugging
     _Submodules->initialize();
 
     _CM = new ChatterinoMonitor(QDir::homePath());
     connect(_CM, &ChatterinoMonitor::changeChannel, this, &MainWindow::changeChannel);
+    connect(_CM, &ChatterinoMonitor::reloadChatterino, this, &MainWindow::reloadChatterino);
 
     forceLoadMenu = new QMenu();
     forceLoadMenu->addAction(new QAction("Load this"));
@@ -47,10 +40,6 @@ MainWindow::MainWindow(QWidget *parent)
             _pChatterinoProcess->start();
         }
     });
-//    connect(ui->widget, &ChatterinoWidget::chatterinoRightMouseClick, this, [=](QPoint pos)
-//    {
-//        forceLoadMenu->exec(pos);
-//    });
 
 }
 
@@ -77,17 +66,19 @@ void MainWindow::setupChatterinoEmbed()
     QTimer * findChatterino = new QTimer;
     connect(findChatterino, &QTimer::timeout, this, [=]()
     {
-        Window result = _WMP.getWID(_pChatterinoProcess->processId());
-        if(result != 0)
+        // Connect PID to ChatterinoMonitor
+        _CM->updatePID(_pChatterinoProcess->processId());
+        // Get window for embedding
+        _wChatterinoWindow = _WMP.getWID(_pChatterinoProcess->processId());
+
+        if(_wChatterinoWindow != 0)
         {
-            QWindow *window = QWindow::fromWinId(result);
-            _chatContainer = createWindowContainer(window);
+            _qtChatwindow = QWindow::fromWinId(_wChatterinoWindow);
+            _chatContainer = createWindowContainer(_qtChatwindow);
             _chatContainer->installEventFilter(CW);
             _chatContainer->setParent(ui->widget);
             _chatContainer->setSizePolicy(QSizePolicy::Policy::Expanding,QSizePolicy::Policy::Expanding);
             _chatContainer->show();
-
-            _chatContainer->setWindowFlag(Qt:: WindowStaysOnTopHint, false);
 
             resizeEmbeds();
 
@@ -109,6 +100,9 @@ void MainWindow::setupChatterinoEmbed()
 // Would use QFileSystemWatcher but it is bugged for linux
 void MainWindow::chatterinoMonitor()
 {
+
+    _CM->checkWindows();
+
 //    return;
     QFile channel("/tmp/chatterino_chan");
     if(channel.open(QFile::ReadOnly))
@@ -196,10 +190,10 @@ void MainWindow::readStreamLink()
 
 void MainWindow::initialize()
 {
-    db "initialize";
     // If we are re-initializing
     if(_bChatterinoEmbedded)
     {
+        db "initialize";
         // Tools changed, re-initialize only what's needed
         if(_Submodules->getChanges() > 0)
         {
@@ -214,6 +208,7 @@ void MainWindow::initialize()
                         restart->deleteLater();
                         _pChatterinoProcess->setProgram(_Submodules->chatterinoPath());
                         _pChatterinoProcess->start();
+
                         setupChatterinoEmbed();
                     }
                 });
@@ -258,9 +253,35 @@ void MainWindow::initialize()
 
     // Setup StreamLink and Chatterino Processes
     _pChatterinoProcess = new QProcess(ui->widget);
+
+    db "set chatterino up";
+    db _Submodules->chatterinoPath();
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("QT_LOGGING_RULES", "chatterino.*.debug=true");
+    env.insert("QT_LOGGING_TO_CONSOLE", "1");
     _pChatterinoProcess->setProgram(_Submodules->chatterinoPath());
+    _pChatterinoProcess->setProcessEnvironment(env);
+    _pChatterinoProcess->setProcessChannelMode(QProcess::MergedChannels);
     _pChatterinoProcess->start();
 
+//    QTimer * a = new QTimer;
+
+//    connect(ui->pushButton, &QPushButton::clicked, this, [=]()
+//    {
+//        QFile a("/tmp/chatroutput.txt");
+//        a.open(QFile::WriteOnly);
+//        QByteArray bb;
+//        for(auto subb : b)
+//            bb.append(subb).append("\n");
+//        a.write(bb);
+//    }
+//           );
+//    a->start(500);
+//    connect(_pChatterinoProcess, &QProcess::readyReadStandardOutput, this, [=]()
+//    {
+//        b.append(_pChatterinoProcess->readAllStandardOutput());
+////        qDebug() << this << _pChatterinoProcess->readAllStandardOutput();
+//    });
     for(int i = 0; i < 2; ++i)
     {
         _pStreamlinkProcess << new QProcess(ui->widget_2);
@@ -335,6 +356,54 @@ void MainWindow::changeChannel(QByteArray channel)
     restart->start(10);
 }
 
+void MainWindow::reloadChatterino()
+{
+    db "Close window";
+    _qtChatwindow->setParent(nullptr);
+    _qtChatwindow->setFlags(Qt::Window);
+
+    QTimer::singleShot(5, this, [=]()
+    {
+        bool b;
+        QProcess p;
+        p.setProgram("/bin/bash");
+        p.setArguments(QStringList() << "/home/inathero/Gits/streamlinkerino/src/scripts/get-window-list" << QString::number(_pChatterinoProcess->processId()));
+        p.start();
+        if(p.waitForFinished(1000))
+        {
+            QList<QByteArray> split = p.readAll().split('\n');
+            qDebug() << split;
+            // Last will always be an empty string as per current script
+            split.removeLast();
+            foreach(QByteArray s, split)
+            {
+                QProcess pp;
+                pp.setProgram("wmctrl");
+                pp.setArguments(QStringList() << "-ic" << QString::number(s.toUInt(&b,16)));
+                pp.startDetached();
+                // Why doesn't this work????
+//                _CM->closeWindow(s.toUInt(&b,16));
+            }
+        }
+    });
+//    _chatContainer->close();
+//    _chatContainer->deleteLater();
+//    _pChatterinoProcess->kill();
+    QTimer * restart = new QTimer(this);
+    connect(restart, &QTimer::timeout, this, [=]()
+    {
+        if(_pChatterinoProcess->state() == 0)
+        {
+            restart->deleteLater();
+            _pChatterinoProcess->setProgram(_Submodules->chatterinoPath());
+            _pChatterinoProcess->start();
+
+            setupChatterinoEmbed();
+        }
+    });
+    restart->start(10);
+}
+
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
     if(_bChatterinoEmbedded)
@@ -380,6 +449,26 @@ void MainWindow::resizeEmbeds()
     ui->centralwidget->lower();
     CW->raise();
     CW->activateWindow();
+}
+
+void MainWindow::createGetWindowListScriptFile()
+{
+    QFile script("/tmp/streamlinkerino-read-windows");
+    QFile internalScript(":/scripts/scripts/get-window-list");
+    if(internalScript.open(QFile::ReadOnly))
+    {
+        auto allFile = internalScript.readAll();
+        internalScript.close();
+        if(script.open(QFile::WriteOnly))
+        {
+            script.write(allFile);
+            script.close();
+        }
+        else
+            db "failed to write get-window-list into tmp";
+    }
+    else
+        db "failed to open internal get-window-list script";
 }
 
 QString MainWindow::generateStatusHTML(bool bPrerollAds)

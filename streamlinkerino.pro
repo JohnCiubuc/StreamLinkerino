@@ -11,6 +11,7 @@ INCLUDEPATH       += src/
 SOURCES += \
     src/ChatterinoMonitor.cpp \
     src/ChatterinoWidget.cpp \
+    src/DebugOverlay.cpp \
     src/main.cpp \
     src/MainWindow.cpp \
     src/Submodules.cpp \
@@ -19,6 +20,7 @@ SOURCES += \
 HEADERS += \
     src/ChatterinoMonitor.h \
     src/ChatterinoWidget.h \
+    src/DebugOverlay.h \
     src/MainWindow.h \
     src/Submodules.h \
     src/WindowsMatchingPID.h
@@ -33,3 +35,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 LIBS += -lX11
+
+DISTFILES +=
+
+RESOURCES += \
+    src/resources.qrc
