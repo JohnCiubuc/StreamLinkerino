@@ -46,6 +46,11 @@ MainWindow::MainWindow(QWidget *parent)
 // Kill StreamLink and Chatterino on exit
 MainWindow::~MainWindow()
 {
+    db "window closed";
+    QProcess::startDetached("/bin/pkill", QStringList() << "mpv");
+    QProcess::startDetached("/bin/pkill", QStringList() << "streamlink");
+    QProcess::startDetached("/bin/pkill", QStringList() << "chatterino");
+    QProcess::startDetached("/bin/pkill", QStringList() << "streamlinkerino");
     _pChatterinoProcess->close();
     _pStreamlinkProcess.at(0)->close();
     _pStreamlinkProcess.at(1)->close();
@@ -385,6 +390,7 @@ void MainWindow::reloadChatterino()
         if(_pChatterinoProcess->state() == 0)
         {
             restart->deleteLater();
+            _pChatterinoProcess->kill();
             _pChatterinoProcess->setProgram(_Submodules->chatterinoPath());
             _pChatterinoProcess->start();
 

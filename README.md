@@ -11,6 +11,7 @@ Integration of this application into a first-class chatterino feature is current
 ## Testing branch TODO:
 
 * Fix bug that the application doesn't correctly close after doing first switch
+    * Seems to be due to the destructor not being called in main window, when window is 'closed'. Need to find fix for that
 * Fix bug where QProcess runs another bash session for `get-window-list` without watiing for previous execution to end 
 * Convert `get-window-list` script into first party feature
 * Convert `wmctrl -ic` into first party feature. Even though I'm using the same code, it doesn't work
