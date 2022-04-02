@@ -7,6 +7,7 @@ Integration of this application into a first-class chatterino feature is current
 
 **Testing branch does not require chatterino to be patched**, but it does have a considerable delay (5-10s) on switching streams due to chatterino json writing frequency.
 
+Also this application only effectively worked on **X11**. Wayland compatibility is wonky at best (chatterino will only occasionally attach, and mpv will never attach)
 
 ## Testing branch TODO:
 
