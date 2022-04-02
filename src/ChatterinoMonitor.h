@@ -1,6 +1,20 @@
 #ifndef CHATTERINOMONITOR_H
 #define CHATTERINOMONITOR_H
 
+#include <X11/Xlib.h>
+
+#undef Bool
+#undef CursorShape
+#undef Expose
+#undef KeyPress
+#undef KeyRelease
+#undef FocusIn
+#undef FocusOut
+#undef FontChange
+#undef None
+#undef Status
+#undef Unsorted
+
 #include <QObject>
 #include <QJsonDocument>
 #include <QTimer>
@@ -8,7 +22,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QProcess>
-#include <X11/Xlib.h>
+//#include <X11/Xlib.h>
 
 #define db qDebug() << this <<
 class ChatterinoMonitor : public QObject

@@ -19,6 +19,8 @@ find_package(X11 REQUIRED)
 set(SOURCES
     main.cpp
     MainWindow.cpp
+    ChatterinoMonitor.cpp
+    DebugOverlay.cpp
     WindowsMatchingPID.cpp
     Submodules.cpp
 )
@@ -27,6 +29,9 @@ set(HEADERS
   WindowsMatchingPID.h
     Submodules.h
 )
+list (APPEND RESOURCES resources.qrc)
+qt5_add_resources (RCC_SOURCES ${RESOURCES})
+
 set(UI 
 MainWindow.ui
 SubmodulesDialog.ui)
@@ -34,5 +39,5 @@ SubmodulesDialog.ui)
 
 
 
-add_executable(streamlinkerino ${SOURCES} ${HEADERS} ${UI})
+add_executable(streamlinkerino ${SOURCES} ${HEADERS} ${UI} ${RCC_SOURCES})
 target_link_libraries(streamlinkerino Qt5::Widgets X11)
