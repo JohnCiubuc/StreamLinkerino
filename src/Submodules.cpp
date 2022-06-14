@@ -112,7 +112,7 @@ void SubmodulesDialog::loadSettings()
             QFileInfo check_file(path + "chatterino");
             if (check_file.exists() && check_file.isFile())
             {
-                _streamlinkPath = path + "chatterino";
+                _chatterinoPath = path + "chatterino";
                 break;
             }
         }
