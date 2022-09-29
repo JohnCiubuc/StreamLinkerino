@@ -11,6 +11,7 @@ SubmodulesDialog::SubmodulesDialog(QWidget *parent) :
     this->hide();
     _SL = new Streamlink;
 
+    ui->label_appimage_warning->hide();
     hideAlerts();
 
     setupConnections();
@@ -73,6 +74,7 @@ void SubmodulesDialog::saveSettings()
 
 void SubmodulesDialog::closeEvent(QCloseEvent *e)
 {
+    db "closeEvent";
     hideAlerts();
     emit submodulesFinished();
     e->accept();
@@ -107,6 +109,16 @@ void SubmodulesDialog::loadSettings()
     if(_chatterinoPath.isEmpty())
     {
         bMissing=true;
+        //
+        QFileInfo check_file("/opt/chatterino/Chatterino-x86_64.AppImage");
+        db "check";
+        if (check_file.exists() && check_file.isFile())
+        {
+            ui->label_appimage_warning->show();
+            db "pass";
+        }
+        else
+        {
         foreach(QString path, paths)
         {
             QFileInfo check_file(path + "chatterino");
@@ -115,6 +127,7 @@ void SubmodulesDialog::loadSettings()
                 _chatterinoPath = path + "chatterino";
                 break;
             }
+        }
         }
     }
     if(bMissing)

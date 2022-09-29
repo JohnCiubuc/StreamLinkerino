@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>642</width>
-    <height>498</height>
+    <width>795</width>
+    <height>739</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -96,7 +96,6 @@
            <property name="font">
             <font>
              <pointsize>10</pointsize>
-             <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
@@ -249,7 +248,6 @@ color:#FFFFFF;</string>
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <underline>true</underline>
                </font>
@@ -279,7 +277,6 @@ color:#FFFFFF;</string>
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <underline>true</underline>
                </font>
@@ -448,12 +445,34 @@ color:#F8F8F8;</string>
          <string notr="true">color: #B6B6B6;</string>
         </property>
         <property name="text">
-         <string>Chatterino is a chat client for twitch chat. It aims to be an improved/extended version of the twitch web chat. 
+         <string>Chatterino is a chat client for twitch chat. 
 
-If using the patched version of chatterino, changing chats will change streams in streamlinkerino, and more!</string>
+If using the patched version of chatterino, changing chats will instantaneously change streams in streamlinkerino!
+
+If using a Non-Patched version of chatterino, changes will be slow (15-30 seconds). We rely on chatterino writing the updated channel to an external file, and it takes a little while!</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_appimage_warning">
+        <property name="styleSheet">
+         <string notr="true">color: rgb(255, 76, 60);</string>
+        </property>
+        <property name="text">
+         <string>WARNING: App-Image version of chatterino was found. This application does NOT work with the AppImage at this time. Please download a binary version OR compile chatterinno from its github</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
        </widget>
       </item>
@@ -465,24 +484,7 @@ If using the patched version of chatterino, changing chats will change streams i
          </font>
         </property>
         <layout class="QGridLayout" name="gridLayout_3">
-         <item row="0" column="0" colspan="2">
-          <widget class="QLabel" name="label_chatterinoAlert">
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>TextLabel</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
+         <item row="3" column="1">
           <widget class="QLineEdit" name="lineEdit_chatterinoPath">
            <property name="font">
             <font>
@@ -500,8 +502,14 @@ If using the patched version of chatterino, changing chats will change streams i
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
+         <item row="3" column="0">
           <widget class="QLabel" name="label_6">
+           <property name="minimumSize">
+            <size>
+             <width>180</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>120</width>
@@ -518,6 +526,22 @@ If using the patched version of chatterino, changing chats will change streams i
            </property>
            <property name="text">
             <string>Chatterino path:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" colspan="2">
+          <widget class="QLabel" name="label_chatterinoAlert">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>

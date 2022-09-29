@@ -71,7 +71,15 @@ void MainWindow::setupChatterinoEmbed()
     QTimer * findChatterino = new QTimer;
     connect(findChatterino, &QTimer::timeout, this, [=]()
     {
+        db "Chatterino pre pid " << _pChatterinoProcess->processId();
+        if (_pChatterinoProcess->processId() == 0)
+        {
+            _pChatterinoProcess->start();
+            return;
+        }
+
         // Connect PID to ChatterinoMonitor
+        db "Chatterino pid " << _pChatterinoProcess->processId();
         _CM->updatePID(_pChatterinoProcess->processId());
         // Get window for embedding
         _wChatterinoWindow = _WMP.getWID(_pChatterinoProcess->processId());
@@ -97,7 +105,7 @@ void MainWindow::setupChatterinoEmbed()
             }
         }
     });
-    findChatterino->start(10);
+    findChatterino->start(100);
 }
 
 // Requires patch to chatterino to monitor channel chages
@@ -194,6 +202,7 @@ void MainWindow::readStreamLink()
 
 void MainWindow::initialize()
 {
+    db "initialize";
     // If we are re-initializing
     if(_bChatterinoEmbedded)
     {
@@ -258,8 +267,14 @@ void MainWindow::initialize()
     // Setup StreamLink and Chatterino Processes
     _pChatterinoProcess = new QProcess(ui->widget);
     _pChatterinoProcess->setProgram(_Submodules->chatterinoPath());
+
+    connect(_pChatterinoProcess, &QProcess::readyReadStandardError, this, [=](){
+   db _pChatterinoProcess->readAllStandardError();
+    });
+
     _pChatterinoProcess->start();
 
+    db "start Chatterino " << _Submodules->chatterinoPath();
 //    QTimer * a = new QTimer;
 
 //    connect(ui->pushButton, &QPushButton::clicked, this, [=]()

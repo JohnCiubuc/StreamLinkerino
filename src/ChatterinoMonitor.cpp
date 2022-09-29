@@ -88,8 +88,8 @@ QString ChatterinoMonitor::getWindowName(Window win)
     unsigned long remain, len;
     unsigned char *list;
 
-    Atom prop = XInternAtom(_display,"WM_NAME",False), type;
-    if (XGetWindowProperty(_display,win,prop,0,1024,False,AnyPropertyType,
+    Atom prop = XInternAtom(_display,"WM_NAME",false), type;
+    if (XGetWindowProperty(_display,win,prop,0,1024,false,AnyPropertyType,
                            &type,&form,&len,&remain,&list) != Success)   // XA_STRING
         return NULL;
 
@@ -103,8 +103,8 @@ int ChatterinoMonitor::client_msg(Window win)
 
     event.xclient.type = ClientMessage;
     event.xclient.serial = 0;
-    event.xclient.send_event = True;
-    event.xclient.message_type = XInternAtom(_display, "_NET_CLOSE_WINDOW", False);
+    event.xclient.send_event = true;
+    event.xclient.message_type = XInternAtom(_display, "_NET_CLOSE_WINDOW", false);
     event.xclient.window = win;
     event.xclient.format = 32;
 //    event.xclient.data.l[0] = data0;
@@ -113,7 +113,7 @@ int ChatterinoMonitor::client_msg(Window win)
 //    event.xclient.data.l[3] = data3;
 //    event.xclient.data.l[4] = data4;
 
-    if (XSendEvent(_display, DefaultRootWindow(_display), False, mask, &event))
+    if (XSendEvent(_display, DefaultRootWindow(_display), false, mask, &event))
     {
         return EXIT_SUCCESS;
     }
